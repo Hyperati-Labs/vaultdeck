@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "VaultDeck",
+    "slug": "vaultdeck",
+    "scheme": "vaultdeck",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/app_icon.png",
+    "splash": {
+      "image": "./assets/app_icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f141b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["ios", "android"],
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "gradleProperties": {
+              "android.enableMinifyInReleaseBuilds": "true",
+              "android.enableShrinkResourcesInReleaseBuilds": "true"
+            }
+          }
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.hyperati.labs.vaultdeck",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID to unlock your vault."
+      }
+    },
+    "android": {
+      "package": "com.hyperati.labs.vaultdeck",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app_icon.png",
+        "backgroundColor": "#0f141b"
+      },
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "69b6b117-ca8e-48bb-aaaa-95cc5f2f41df"
+      }
+    },
+    "owner": "hyperati-labs",
+    "description": "Secure, offline-first vault for storing payment card details with encrypted local storage and passphrase-protected backups. By Hyperati Labs."
+  }
+}

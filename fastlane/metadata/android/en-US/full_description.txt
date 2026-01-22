@@ -1,0 +1,12 @@
+VaultDeck is a minimal, offline-first vault for storing payment card details.
+
+Features:
+- PIN + biometrics unlock
+- Encrypted local vault (device keychain/keystore)
+- Encrypted backups with passphrase
+- Tagging and search
+- Theme toggle and privacy controls
+
+Notes:
+- Works fully offline.
+- Backups use a passphrase you provide during export/import.
