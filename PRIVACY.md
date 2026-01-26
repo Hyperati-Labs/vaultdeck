@@ -1,6 +1,6 @@
 # Privacy Policy for VaultDeck
 
-_Last Updated: January 23, 2026_
+_Last Updated: January 26, 2026_
 
 Hyperati Labs ("we," "us," or "our") operates the VaultDeck mobile application ("the App"). This Privacy Policy explains our practices regarding the collection, use, and disclosure of information when you use our App.
 

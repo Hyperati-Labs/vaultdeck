@@ -32,7 +32,7 @@ export default function CardDetailScreen() {
   const styles = getStyles(theme);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { vault, deleteCard, loadVault, loading } = useVaultStore();
+  const { vault, deleteCard, loadVault, loading, upsertCard } = useVaultStore();
   const clipboardTimeoutSeconds = useSettingsStore(
     (state) => state.clipboardTimeoutSeconds
   );
@@ -152,6 +152,19 @@ export default function CardDetailScreen() {
         <View style={styles.header}>
           <BackButton />
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() =>
+                upsertCard({ ...card, favorite: !Boolean(card.favorite) })
+              }
+              style={styles.iconAction}
+              accessibilityLabel={card.favorite ? "Unfavorite" : "Favorite"}
+            >
+              <Ionicons
+                name={card.favorite ? "heart" : "heart-outline"}
+                size={18}
+                color={card.favorite ? theme.colors.accent : theme.colors.ink}
+              />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push(`/card/edit/${card.id}`)}
               style={styles.iconAction}

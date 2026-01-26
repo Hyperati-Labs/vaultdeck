@@ -9,6 +9,7 @@ export type Card = {
   expiryYear: string;
   notes?: string;
   tags: string[];
+  favorite?: boolean;
   createdAt: string;
   updatedAt: string;
 };

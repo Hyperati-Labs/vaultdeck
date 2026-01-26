@@ -7,6 +7,7 @@ Minimal, offline-first vault for storing payment card details with biometric/PIN
 - PIN + biometrics unlock
 - Encrypted local vault (device keychain/keystore)
 - Encrypted backups with passphrase
+- Favorites for quick access
 - Tagging and search
 - Theme toggle and privacy controls
 

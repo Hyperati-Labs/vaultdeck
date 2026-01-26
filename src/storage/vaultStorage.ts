@@ -29,6 +29,21 @@ const BACKUP_MAGIC = "VAULTDECK_BACKUP";
 let webVaultBlob: string | null = null;
 let webVaultBackup: string | null = null;
 
+type BackupEnvelope = {
+  magic: string;
+  version: number;
+  kdf: "pbkdf2-sha256";
+  salt: string;
+  iterations: number;
+  payload: EncryptedPayload;
+};
+
+type BackupPayload = {
+  version: number;
+  key: string;
+  blob: string;
+};
+
 export class VaultMissingKeyError extends Error {
   constructor() {
     super("Vault key is missing");
@@ -92,7 +107,7 @@ export async function vaultBlobExists(): Promise<boolean> {
   return info.exists;
 }
 
-async function deriveBackupKey(
+export async function deriveBackupKey(
   passphrase: string,
   saltBase64: string,
   iterations: number
@@ -111,197 +126,173 @@ function getBackupIterations(): number {
   return 120000;
 }
 
-export async function exportVaultBlob(passphrase: string): Promise<string> {
-  if (!passphrase) {
-    throw new VaultPassphraseRequiredError();
-  }
-  if (Platform.OS === "web") {
-    if (!webVaultBlob) {
-      throw new VaultCorruptError();
-    }
-    const key = await getVaultKey();
-    if (!key) {
-      throw new VaultMissingKeyError();
-    }
-    const salt = encodeBase64(
-      await Crypto.getRandomBytesAsync(BACKUP_SALT_BYTES)
-    );
-    const iterations = getBackupIterations();
-    const derivedKey = await deriveBackupKey(passphrase, salt, iterations);
-    const payload = await encryptPayload(
-      JSON.stringify({
-        version: VAULT_BACKUP_VERSION,
-        key,
-        blob: webVaultBlob,
-      }),
-      derivedKey
-    );
-    webVaultBackup = JSON.stringify({
-      magic: BACKUP_MAGIC,
-      version: BACKUP_FORMAT_VERSION,
-      kdf: "pbkdf2-sha256",
-      salt,
-      iterations,
-      payload,
-    });
-    return "memory://vault-backup";
-  }
-  const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
-  if (!info.exists) {
+function ensureIterationsInRange(iterations: number): void {
+  if (
+    !iterations ||
+    iterations < BACKUP_KDF_MIN_ITERATIONS ||
+    iterations > BACKUP_KDF_MAX_ITERATIONS
+  ) {
     throw new VaultCorruptError();
   }
-  const key = await getVaultKey();
-  if (!key) {
-    throw new VaultMissingKeyError();
+}
+
+function parseBackupEnvelope(serialized: string): BackupEnvelope {
+  try {
+    const parsed = JSON.parse(serialized) as Partial<BackupEnvelope>;
+    if (
+      !parsed ||
+      parsed.magic !== BACKUP_MAGIC ||
+      parsed.version !== BACKUP_FORMAT_VERSION ||
+      parsed.kdf !== "pbkdf2-sha256" ||
+      !parsed.salt ||
+      !parsed.payload ||
+      typeof parsed.iterations !== "number"
+    ) {
+      throw new VaultCorruptError();
+    }
+    ensureIterationsInRange(parsed.iterations);
+    return parsed as BackupEnvelope;
+  } catch (error) {
+    if (error instanceof VaultCorruptError) {
+      throw error;
+    }
+    throw new VaultCorruptError();
   }
-  const blob = await FileSystem.readAsStringAsync(VAULT_BLOB_PATH, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
-  const salt = encodeBase64(
-    await Crypto.getRandomBytesAsync(BACKUP_SALT_BYTES)
-  );
+}
+
+async function buildBackupEnvelope(
+  passphrase: string,
+  backup: BackupPayload
+): Promise<BackupEnvelope> {
+  const saltBytes = await Crypto.getRandomBytesAsync(BACKUP_SALT_BYTES);
+  const salt = encodeBase64(saltBytes);
   const iterations = getBackupIterations();
   const derivedKey = await deriveBackupKey(passphrase, salt, iterations);
-  const payload = await encryptPayload(
-    JSON.stringify({ version: VAULT_BACKUP_VERSION, key, blob }),
-    derivedKey
-  );
-  const envelope = JSON.stringify({
+  const payload = await encryptPayload(JSON.stringify(backup), derivedKey);
+  return {
     magic: BACKUP_MAGIC,
     version: BACKUP_FORMAT_VERSION,
     kdf: "pbkdf2-sha256",
     salt,
     iterations,
     payload,
+  };
+}
+
+async function decryptBackupEnvelope(
+  passphrase: string,
+  envelope: BackupEnvelope
+): Promise<BackupPayload> {
+  ensureIterationsInRange(envelope.iterations);
+  const derivedKey = await deriveBackupKey(
+    passphrase,
+    envelope.salt,
+    envelope.iterations
+  );
+  const plaintext = decryptPayload(envelope.payload, derivedKey);
+  try {
+    return JSON.parse(plaintext) as BackupPayload;
+  } catch {
+    throw new VaultCorruptError();
+  }
+}
+
+function serializeBackupEnvelope(envelope: BackupEnvelope): string {
+  return JSON.stringify(envelope);
+}
+
+async function readBackupContent(sourceUri?: string): Promise<string> {
+  if (Platform.OS === "web") {
+    if (!webVaultBackup) {
+      throw new VaultCorruptError();
+    }
+    return webVaultBackup;
+  }
+  const fromUri = sourceUri ?? VAULT_BACKUP_PATH;
+  const info = await FileSystem.getInfoAsync(fromUri);
+  if (!info.exists) {
+    throw new VaultCorruptError();
+  }
+  return FileSystem.readAsStringAsync(fromUri, {
+    encoding: FileSystem.EncodingType.UTF8,
   });
-  await FileSystem.writeAsStringAsync(VAULT_BACKUP_PATH, envelope, {
+}
+
+async function writeBackupContent(serialized: string): Promise<string> {
+  if (Platform.OS === "web") {
+    webVaultBackup = serialized;
+    return "memory://vault-backup";
+  }
+  await FileSystem.writeAsStringAsync(VAULT_BACKUP_PATH, serialized, {
     encoding: FileSystem.EncodingType.UTF8,
   });
   return VAULT_BACKUP_PATH;
+}
+
+export async function exportVaultBlob(passphrase: string): Promise<string> {
+  if (!passphrase) {
+    throw new VaultPassphraseRequiredError();
+  }
+  const key = await getVaultKey();
+  if (!key) {
+    throw new VaultMissingKeyError();
+  }
+
+  let blob: string | null = null;
+  if (Platform.OS === "web") {
+    blob = webVaultBlob;
+  } else {
+    const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
+    if (!info.exists) {
+      throw new VaultCorruptError();
+    }
+    blob = await FileSystem.readAsStringAsync(VAULT_BLOB_PATH, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+  }
+
+  if (!blob) {
+    throw new VaultCorruptError();
+  }
+
+  const envelope = await buildBackupEnvelope(passphrase, {
+    version: VAULT_BACKUP_VERSION,
+    key,
+    blob,
+  });
+
+  const serialized = serializeBackupEnvelope(envelope);
+  return writeBackupContent(serialized);
 }
 
 export async function importVaultBlob(
   sourceUri?: string,
   passphrase?: string
 ): Promise<void> {
+  if (!passphrase) {
+    throw new VaultPassphraseRequiredError();
+  }
+
+  const content = await readBackupContent(sourceUri);
+  if (__DEV__ && Platform.OS !== "web") {
+    logger.info("Import vault blob", {
+      uri: sourceUri ?? VAULT_BACKUP_PATH,
+      length: content.length,
+    });
+  }
+
+  const envelope = parseBackupEnvelope(content);
+  const backup = await decryptBackupEnvelope(passphrase, envelope);
+  await setItem(VAULT_KEY_ID, backup.key);
+
   if (Platform.OS === "web") {
-    if (!webVaultBackup) {
-      throw new VaultCorruptError();
-    }
-    const parsed = JSON.parse(webVaultBackup) as {
-      magic?: string;
-      version?: number;
-      kdf?: string;
-      salt?: string;
-      iterations?: number;
-      payload?: EncryptedPayload;
-    };
-    if (
-      !parsed?.version ||
-      parsed.version !== BACKUP_FORMAT_VERSION ||
-      parsed.magic !== BACKUP_MAGIC
-    ) {
-      throw new VaultCorruptError();
-    }
-    if (!passphrase) {
-      throw new VaultPassphraseRequiredError();
-    }
-    if (!parsed.salt || !parsed.payload || parsed.kdf !== "pbkdf2-sha256") {
-      throw new VaultCorruptError();
-    }
-    if (
-      !parsed.iterations ||
-      parsed.iterations < BACKUP_KDF_MIN_ITERATIONS ||
-      parsed.iterations > BACKUP_KDF_MAX_ITERATIONS
-    ) {
-      throw new VaultCorruptError();
-    }
-    const derivedKey = await deriveBackupKey(
-      passphrase,
-      parsed.salt,
-      parsed.iterations
-    );
-    const plaintext = decryptPayload(parsed.payload, derivedKey);
-    const backup = JSON.parse(plaintext) as { key: string; blob: string };
-    await setItem(VAULT_KEY_ID, backup.key);
     webVaultBlob = backup.blob;
     return;
   }
 
-  const fromUri = sourceUri ?? VAULT_BACKUP_PATH;
-  const info = await FileSystem.getInfoAsync(fromUri);
-  if (!info.exists) {
-    throw new VaultCorruptError();
-  }
-  try {
-    const content = await FileSystem.readAsStringAsync(fromUri, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-    if (__DEV__) {
-      logger.info("Import vault blob", {
-        uri: fromUri,
-        length: content.length,
-      });
-    }
-    try {
-      const parsed = JSON.parse(content) as {
-        magic?: string;
-        version?: number;
-        kdf?: string;
-        salt?: string;
-        iterations?: number;
-        payload?: EncryptedPayload;
-      };
-      if (
-        !parsed?.version ||
-        parsed.version !== BACKUP_FORMAT_VERSION ||
-        parsed.magic !== BACKUP_MAGIC
-      ) {
-        throw new VaultCorruptError();
-      }
-      if (!passphrase) {
-        throw new VaultPassphraseRequiredError();
-      }
-      if (!parsed.salt || !parsed.payload || parsed.kdf !== "pbkdf2-sha256") {
-        throw new VaultCorruptError();
-      }
-      if (
-        !parsed.iterations ||
-        parsed.iterations < BACKUP_KDF_MIN_ITERATIONS ||
-        parsed.iterations > BACKUP_KDF_MAX_ITERATIONS
-      ) {
-        throw new VaultCorruptError();
-      }
-      const derivedKey = await deriveBackupKey(
-        passphrase,
-        parsed.salt,
-        parsed.iterations
-      );
-      const plaintext = decryptPayload(parsed.payload, derivedKey);
-      const backup = JSON.parse(plaintext) as { key: string; blob: string };
-      await setItem(VAULT_KEY_ID, backup.key);
-      await FileSystem.writeAsStringAsync(VAULT_BLOB_PATH, backup.blob, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
-      return;
-    } catch (error) {
-      if (error instanceof VaultPassphraseRequiredError) {
-        throw error;
-      }
-      if (error instanceof VaultCorruptError) {
-        throw error;
-      }
-      throw new VaultCorruptError();
-    }
-  } catch (error) {
-    if (error instanceof VaultPassphraseRequiredError) {
-      throw error;
-    }
-    if (error instanceof VaultCorruptError) {
-      throw error;
-    }
-    throw new VaultCorruptError();
-  }
+  await FileSystem.writeAsStringAsync(VAULT_BLOB_PATH, backup.blob, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
 }
 
 export function serializeEncryptedPayload(payload: EncryptedPayload): string {

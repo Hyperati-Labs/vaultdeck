@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo as reactUseMemo } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useNavigation } from "expo-router";
 import { BlurView } from "expo-blur";
 import CardBrandIcon from "./CardBrandIcon";
 
@@ -23,6 +22,12 @@ import { useTheme } from "../utils/useTheme";
 import { useHaptics } from "../utils/useHaptics";
 import BackButton from "./BackButton";
 import { useVaultStore } from "../state/vaultStore";
+import { useCardFormatting } from "./CardForm/hooks/useCardFormatting";
+import { useCardFormState } from "./CardForm/hooks/useCardFormState";
+import { useCardValidation } from "./CardForm/hooks/useCardValidation";
+import { useCardTags } from "./CardForm/hooks/useCardTags";
+import { useDiscardWarning } from "./CardForm/hooks/useDiscardWarning";
+import { getCardFormStyles } from "./CardForm/cardFormStyles";
 
 type CardFormProps = {
   initial?: Partial<Card>;
@@ -41,7 +46,7 @@ type CardFormProps = {
   submitLabel: string;
 };
 
-const MIN_NAME_LENGTH = 1;
+const storeFullNumber = true;
 
 export default function CardForm({
   initial,
@@ -50,190 +55,49 @@ export default function CardForm({
   showBack = true,
 }: CardFormProps) {
   const theme = useTheme();
-  const styles = getStyles(theme);
-  const [nickname, setNickname] = useState(initial?.nickname ?? "");
-  const [issuer, setIssuer] = useState(initial?.issuer ?? "");
-  const [cardholderName, setCardholderName] = useState(
-    initial?.cardholderName ?? ""
-  );
-  const [cardNumber, setCardNumber] = useState(initial?.cardNumber ?? "");
-  const [expiryDate, setExpiryDate] = useState(
-    initial?.expiryMonth && initial?.expiryYear
-      ? `${initial.expiryMonth}/${initial.expiryYear}`
-      : ""
-  );
-  const [notes, setNotes] = useState(initial?.notes ?? "");
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    initial?.tags ?? []
-  );
-  const [tagInput, setTagInput] = useState("");
-  const storeFullNumber = true;
+  const styles = getCardFormStyles(theme);
+
+  // Use extracted hooks for form state management
+  const formState = useCardFormState(initial);
+  const { vault } = useVaultStore();
+  const tags = useCardTags(initial?.tags, vault ?? undefined);
+  const validation = useCardValidation(formState, initial);
+  const discard = useDiscardWarning(validation.isDirty);
+  const formatting = useCardFormatting();
   const { impact } = useHaptics();
 
-  const { vault } = useVaultStore();
-  const allVaultTags = useMemo(() => {
-    const set = new Set<string>();
-    vault?.cards.forEach((c) =>
-      c.tags?.forEach((t) => set.add(t.toLowerCase()))
-    );
-    return Array.from(set).sort();
-  }, [vault]);
+  // Detect card type from card number
+  const cardType = reactUseMemo(
+    () => detectCardType(formState.cardNumber),
+    [formState.cardNumber]
+  );
 
-  const tagSuggestions = useMemo(() => {
-    if (!tagInput.trim()) return [];
-    const input = tagInput.trim().toLowerCase();
-    return allVaultTags.filter(
-      (t) => t.includes(input) && !selectedTags.includes(t)
-    );
-  }, [allVaultTags, tagInput, selectedTags]);
-
-  const navigation = useNavigation();
-  const isDirty = useMemo(() => {
-    return (
-      nickname !== (initial?.nickname ?? "") ||
-      issuer !== (initial?.issuer ?? "") ||
-      cardholderName !== (initial?.cardholderName ?? "") ||
-      cardNumber !== (initial?.cardNumber ?? "") ||
-      expiryDate !==
-        (initial?.expiryMonth && initial?.expiryYear
-          ? `${initial.expiryMonth}/${initial.expiryYear}`
-          : "") ||
-      notes !== (initial?.notes ?? "") ||
-      JSON.stringify(selectedTags) !== JSON.stringify(initial?.tags ?? [])
-    );
-  }, [
-    nickname,
-    issuer,
-    cardholderName,
-    cardNumber,
-    expiryDate,
-    notes,
-    selectedTags,
-    initial,
-  ]);
-
-  const [discardModalVisible, setDiscardModalVisible] = useState(false);
-  const [pendingAction, setPendingAction] = useState<any>(null);
-  const isDiscarding = useRef(false);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
-      if (!isDirty || isDiscarding.current) {
-        return;
-      }
-      e.preventDefault();
-      setPendingAction(e.data.action);
-      setDiscardModalVisible(true);
-    });
-    return unsubscribe;
-  }, [navigation, isDirty]);
-
-  const canSubmit = useMemo(() => {
-    return nickname.trim().length >= MIN_NAME_LENGTH && expiryDate.length === 7;
-  }, [expiryDate.length, nickname]);
-
-  const handleExpiryChange = (text: string) => {
-    let clean = text.replace(/\//g, "").replace(/\D/g, "");
-    if (clean.length > 0) {
-      const firstDigit = parseInt(clean[0]);
-      if (firstDigit > 1) {
-        clean = "0" + clean;
-      } else if (clean.length >= 2) {
-        const month = parseInt(clean.substring(0, 2));
-        if (month > 12) {
-          clean = "0" + clean[0];
-        } else if (month === 0) {
-          clean = "0";
-        }
-      }
-    }
-    clean = clean.substring(0, 6);
-    let formatted = clean;
-    if (clean.length > 2) {
-      formatted = clean.substring(0, 2) + "/" + clean.substring(2);
-    }
-    setExpiryDate(formatted);
-  };
-
-  const handleCardNumberChange = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 19);
-    setCardNumber(digits);
-  };
-
-  const formatCardNumber = (digits: string) => {
-    const groups: string[] = [];
-    for (let i = 0; i < digits.length; i += 4) {
-      groups.push(digits.slice(i, i + 4));
-    }
-    return groups.join(" ");
-  };
-
-  const cardType = useMemo(() => detectCardType(cardNumber), [cardNumber]);
-
-  const [tagInputVisible, setTagInputVisible] = useState(false);
-  const tagInputRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    if (tagInputVisible) {
-      tagInputRef.current?.focus();
-    }
-  }, [tagInputVisible]);
-
-  const handleTagInput = (text: string) => {
-    const lower = text.toLowerCase();
-    if (lower.endsWith(",") || lower.endsWith(" ")) {
-      const newTag = lower.slice(0, -1).trim();
-      if (newTag && !selectedTags.includes(newTag)) {
-        impact(Haptics.ImpactFeedbackStyle.Light);
-        setSelectedTags([...selectedTags, newTag]);
-        setTagInput("");
-      } else {
-        setTagInput("");
-      }
-      return;
-    }
-    setTagInput(text);
-  };
-
-  const addTag = (tag: string) => {
-    if (!selectedTags.includes(tag)) {
-      impact(Haptics.ImpactFeedbackStyle.Light);
-      setSelectedTags([...selectedTags, tag]);
-    }
-    setTagInput("");
-    setTagInputVisible(false);
-  };
-
-  const removeTag = (tag: string) => {
-    impact(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedTags(selectedTags.filter((t) => t !== tag));
-  };
-
+  // Handle form submission
   const handleSubmit = () => {
-    if (!canSubmit) return;
-    const finalTags = [...selectedTags];
-    if (tagInput.trim()) {
-      const lastTag = tagInput.trim().toLowerCase();
+    if (!validation.canSubmit) return;
+    const finalTags = [...tags.selectedTags];
+    if (tags.tagInput.trim()) {
+      const lastTag = tags.tagInput.trim().toLowerCase();
       if (!finalTags.includes(lastTag)) {
         finalTags.push(lastTag);
       }
     }
 
-    const trimmedNumber = cardNumber.trim();
+    const trimmedNumber = formState.cardNumber.trim();
     const storedNumber =
       storeFullNumber && trimmedNumber ? trimmedNumber : undefined;
     const computedLast4 = deriveLast4(trimmedNumber);
-    isDiscarding.current = true;
-    const [m, y] = expiryDate.split("/");
+    discard.isDiscarding.current = true;
+    const [m, y] = formState.expiryDate.split("/");
     onSubmit({
-      nickname: nickname.trim(),
-      issuer: issuer.trim(),
-      cardholderName: cardholderName.trim(),
+      nickname: formState.nickname.trim(),
+      issuer: formState.issuer.trim(),
+      cardholderName: formState.cardholderName.trim(),
       cardNumber: storedNumber,
       last4: computedLast4 || undefined,
       expiryMonth: m,
       expiryYear: y,
-      notes: notes.trim() || undefined,
+      notes: formState.notes.trim() || undefined,
       tags: finalTags,
     });
   };
@@ -247,15 +111,20 @@ export default function CardForm({
       <View style={styles.stickyHeader}>
         {showBack ? <BackButton /> : <View style={styles.headerSpacer} />}
         <TouchableOpacity
-          style={[styles.saveButton, !canSubmit && styles.saveButtonDisabled]}
+          style={[
+            styles.saveButton,
+            !validation.canSubmit && styles.saveButtonDisabled,
+          ]}
           onPress={handleSubmit}
-          disabled={!canSubmit}
+          disabled={!validation.canSubmit}
           accessibilityLabel={submitLabel}
         >
           <Ionicons
             name="checkmark"
             size={24}
-            color={canSubmit ? theme.colors.surface : theme.colors.muted}
+            color={
+              validation.canSubmit ? theme.colors.surface : theme.colors.muted
+            }
           />
         </TouchableOpacity>
       </View>
@@ -273,8 +142,8 @@ export default function CardForm({
             <Text style={styles.label}>Nickname</Text>
             <View style={styles.inputWrapper}>
               <TextInput
-                value={nickname}
-                onChangeText={setNickname}
+                value={formState.nickname}
+                onChangeText={formState.setNickname}
                 style={styles.input}
                 placeholder="e.g. Personal Credit"
                 placeholderTextColor={theme.colors.muted + "80"}
@@ -286,8 +155,8 @@ export default function CardForm({
             <Text style={styles.label}>Bank Name</Text>
             <View style={styles.inputWrapper}>
               <TextInput
-                value={issuer}
-                onChangeText={setIssuer}
+                value={formState.issuer}
+                onChangeText={formState.setIssuer}
                 style={styles.input}
                 placeholder="e.g. HDFC Bank"
                 placeholderTextColor={theme.colors.muted + "80"}
@@ -299,8 +168,8 @@ export default function CardForm({
             <Text style={styles.label}>Cardholder Name</Text>
             <View style={styles.inputWrapper}>
               <TextInput
-                value={cardholderName}
-                onChangeText={setCardholderName}
+                value={formState.cardholderName}
+                onChangeText={formState.setCardholderName}
                 style={styles.input}
                 placeholder="Name as on card"
                 placeholderTextColor={theme.colors.muted + "80"}
@@ -314,8 +183,13 @@ export default function CardForm({
             <View style={styles.inputWrapper}>
               <View style={styles.cardNumberRow}>
                 <TextInput
-                  value={formatCardNumber(cardNumber)}
-                  onChangeText={handleCardNumberChange}
+                  value={formatting.formatCardNumberForDisplay(
+                    formState.cardNumber
+                  )}
+                  onChangeText={(value) => {
+                    const formatted = formatting.handleCardNumberChange(value);
+                    formState.setCardNumber(formatted);
+                  }}
                   style={[styles.input, styles.cardNumberInput]}
                   placeholder="0000 0000 0000 0000"
                   placeholderTextColor={theme.colors.muted + "80"}
@@ -332,8 +206,11 @@ export default function CardForm({
             <Text style={styles.label}>Expiry Date</Text>
             <View style={styles.inputWrapper}>
               <TextInput
-                value={expiryDate}
-                onChangeText={handleExpiryChange}
+                value={formState.expiryDate}
+                onChangeText={(text) => {
+                  const formatted = formatting.handleExpiryChange(text);
+                  formState.setExpiryDate(formatted);
+                }}
                 style={styles.input}
                 placeholder="MM/YYYY"
                 placeholderTextColor={theme.colors.muted + "80"}
@@ -346,8 +223,8 @@ export default function CardForm({
             <Text style={styles.label}>Notes</Text>
             <View style={[styles.inputWrapper, styles.notesWrapper]}>
               <TextInput
-                value={notes}
-                onChangeText={setNotes}
+                value={formState.notes}
+                onChangeText={formState.setNotes}
                 style={[styles.input, styles.notesInput]}
                 placeholder="Optional notes or security details..."
                 placeholderTextColor={theme.colors.muted + "80"}
@@ -361,10 +238,15 @@ export default function CardForm({
             <Text style={styles.label}>Tags</Text>
             <View style={styles.tagsContainer}>
               <View style={styles.tagsFlow}>
-                {selectedTags.map((tag) => (
+                {tags.selectedTags.map((tag) => (
                   <View key={tag} style={styles.tagChip}>
                     <Text style={styles.tagChipText}>#{tag}</Text>
-                    <TouchableOpacity onPress={() => removeTag(tag)}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        impact(Haptics.ImpactFeedbackStyle.Light);
+                        tags.removeTag(tag);
+                      }}
+                    >
                       <Ionicons
                         name="close"
                         size={14}
@@ -374,16 +256,17 @@ export default function CardForm({
                   </View>
                 ))}
 
-                {tagInputVisible ? (
+                {tags.tagInputVisible ? (
                   <TextInput
-                    ref={tagInputRef}
-                    value={tagInput}
-                    onChangeText={handleTagInput}
+                    ref={tags.tagInputRef}
+                    value={tags.tagInput}
+                    onChangeText={tags.handleTagInput}
                     onSubmitEditing={() =>
-                      tagInput.trim() && addTag(tagInput.trim().toLowerCase())
+                      tags.tagInput.trim() &&
+                      tags.addTag(tags.tagInput.trim().toLowerCase())
                     }
                     onBlur={() => {
-                      if (!tagInput.trim()) setTagInputVisible(false);
+                      if (!tags.tagInput.trim()) tags.setTagInputVisible(false);
                     }}
                     style={styles.tagInputInline}
                     placeholder="tag name..."
@@ -396,7 +279,7 @@ export default function CardForm({
                     style={styles.addTagButton}
                     onPress={() => {
                       impact(Haptics.ImpactFeedbackStyle.Light);
-                      setTagInputVisible(true);
+                      tags.setTagInputVisible(true);
                     }}
                   >
                     <Ionicons
@@ -409,14 +292,17 @@ export default function CardForm({
                 )}
               </View>
 
-              {tagInputVisible && tagSuggestions.length > 0 && (
+              {tags.tagInputVisible && tags.tagSuggestions.length > 0 && (
                 <View style={styles.suggestions}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {tagSuggestions.map((suggestion) => (
+                    {tags.tagSuggestions.map((suggestion) => (
                       <TouchableOpacity
                         key={suggestion}
                         style={styles.suggestionItem}
-                        onPress={() => addTag(suggestion)}
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          tags.addTag(suggestion);
+                        }}
                       >
                         <Text style={styles.suggestionText}>#{suggestion}</Text>
                       </TouchableOpacity>
@@ -429,7 +315,11 @@ export default function CardForm({
         </View>
       </ScrollView>
 
-      <Modal visible={discardModalVisible} transparent animationType="fade">
+      <Modal
+        visible={discard.discardModalVisible}
+        transparent
+        animationType="fade"
+      >
         <View style={styles.modalBackdrop}>
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
           <View style={styles.modalSheet}>
@@ -440,19 +330,13 @@ export default function CardForm({
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.modalGhost}
-                onPress={() => setDiscardModalVisible(false)}
+                onPress={discard.cancelDiscard}
               >
                 <Text style={styles.modalGhostText}>Keep Editing</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalDanger}
-                onPress={() => {
-                  setDiscardModalVisible(false);
-                  if (pendingAction) {
-                    isDiscarding.current = true;
-                    navigation.dispatch(pendingAction);
-                  }
-                }}
+                onPress={discard.confirmDiscard}
               >
                 <Text style={styles.modalDangerText}>Discard</Text>
               </TouchableOpacity>
@@ -463,251 +347,3 @@ export default function CardForm({
     </KeyboardAvoidingView>
   );
 }
-
-const getStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    content: {
-      paddingBottom: theme.spacing.xl * 2,
-    },
-    stickyHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingVertical: theme.spacing.md,
-      marginBottom: theme.spacing.xs,
-    },
-    headerSpacer: {
-      width: 40,
-    },
-    saveButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.colors.accent,
-      alignItems: "center",
-      justifyContent: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    saveButtonDisabled: {
-      backgroundColor: theme.colors.surfaceTint,
-      opacity: 0.5,
-    },
-    section: {
-      marginBottom: theme.spacing.lg,
-    },
-    sectionTitle: {
-      fontFamily: theme.font.bold,
-      fontSize: 12,
-      color: theme.colors.accent,
-      textTransform: "uppercase",
-      letterSpacing: 1.5,
-      marginBottom: theme.spacing.md,
-      marginLeft: 4,
-    },
-    field: {
-      marginBottom: theme.spacing.lg,
-    },
-    fieldHalf: {
-      flex: 1,
-    },
-    label: {
-      fontFamily: theme.font.bold,
-      fontSize: 13,
-      color: theme.colors.muted,
-      marginBottom: theme.spacing.xs,
-      marginLeft: 4,
-    },
-    inputWrapper: {
-      backgroundColor: theme.colors.surfaceTint,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-      paddingHorizontal: 16,
-      overflow: "hidden",
-    },
-    notesWrapper: {
-      paddingVertical: 12,
-    },
-    input: {
-      paddingVertical: 14,
-      color: theme.colors.ink,
-      fontFamily: theme.font.regular,
-      fontSize: 16,
-    },
-    cardNumberRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: theme.spacing.sm,
-    },
-    cardNumberInput: {
-      flex: 1,
-    },
-    cardBrand: {
-      width: 32,
-      height: 24,
-      borderRadius: 4,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    row: {
-      flexDirection: "row",
-      gap: theme.spacing.md,
-    },
-    labelLowercase: {
-      fontFamily: theme.font.bold,
-      fontSize: 13,
-      color: theme.colors.muted,
-      marginBottom: theme.spacing.sm,
-      marginLeft: 4,
-    },
-    notesInput: {
-      minHeight: 100,
-      textAlignVertical: "top",
-      paddingTop: 0,
-    },
-    tagsContainer: {
-      minHeight: 44,
-      paddingHorizontal: 4,
-      marginTop: 4,
-    },
-    tagsFlow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      alignItems: "center",
-      gap: 12,
-    },
-    tagChip: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceTint,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 20,
-      gap: 6,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-    },
-    tagChipText: {
-      fontFamily: theme.font.regular,
-      fontSize: 15,
-      color: theme.colors.ink,
-      lineHeight: 18,
-      includeFontPadding: false,
-    },
-    addTagButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: theme.colors.surfaceTint,
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      borderRadius: 20,
-      gap: 6,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-    },
-    addTagButtonText: {
-      fontFamily: theme.font.bold,
-      fontSize: 14,
-      color: theme.colors.accent,
-      lineHeight: 18,
-      includeFontPadding: false,
-    },
-    tagInputInline: {
-      minWidth: 100,
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      color: theme.colors.ink,
-      fontFamily: theme.font.regular,
-      fontSize: 15,
-      backgroundColor: theme.colors.surfaceTint,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: theme.colors.accent,
-      includeFontPadding: false,
-    },
-    suggestions: {
-      marginTop: 12,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outline,
-    },
-    suggestionItem: {
-      backgroundColor: theme.colors.surface,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 20,
-      marginRight: 8,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-    },
-    suggestionText: {
-      fontFamily: theme.font.regular,
-      fontSize: 13,
-      color: theme.colors.muted,
-    },
-    modalBackdrop: {
-      flex: 1,
-      justifyContent: "center",
-      padding: theme.spacing.xl,
-      backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    modalSheet: {
-      borderRadius: theme.radius.xl,
-      backgroundColor: theme.colors.surface,
-      padding: theme.spacing.xl,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.2,
-      shadowRadius: 24,
-      elevation: 10,
-    },
-    modalTitle: {
-      fontFamily: theme.font.bold,
-      color: theme.colors.ink,
-      fontSize: 20,
-      marginBottom: theme.spacing.sm,
-      textAlign: "center",
-    },
-    modalBody: {
-      fontFamily: theme.font.regular,
-      color: theme.colors.muted,
-      textAlign: "center",
-      fontSize: 15,
-      lineHeight: 22,
-      marginBottom: theme.spacing.xl,
-    },
-    modalActions: {
-      flexDirection: "row",
-      gap: theme.spacing.md,
-    },
-    modalGhost: {
-      flex: 1,
-      borderRadius: theme.radius.md,
-      paddingVertical: theme.spacing.md,
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceTint,
-    },
-    modalGhostText: {
-      color: theme.colors.ink,
-      fontFamily: theme.font.bold,
-    },
-    modalDanger: {
-      flex: 1,
-      borderRadius: theme.radius.md,
-      paddingVertical: theme.spacing.md,
-      alignItems: "center",
-      backgroundColor: theme.colors.danger,
-    },
-    modalDangerText: {
-      color: theme.colors.surface,
-      fontFamily: theme.font.bold,
-    },
-  });

@@ -39,6 +39,11 @@ export default function Index() {
     upsertCard,
     deleteCard,
   } = useVaultStore();
+  const listRef = useRef<FlatList<Card>>(null);
+  const snackbarTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const [query, setQuery] = useState("");
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -59,6 +64,14 @@ export default function Index() {
       loadVault();
     }
   }, [error, loadVault, loading, vault]);
+
+  useEffect(() => {
+    return () => {
+      if (snackbarTimer.current) {
+        clearTimeout(snackbarTimer.current);
+      }
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     if (!vault) {
@@ -130,6 +143,20 @@ export default function Index() {
     setLongPressedCard(null);
     notify(Haptics.NotificationFeedbackType.Warning);
   };
+
+  const handleToggleFavorite = async () => {
+    if (!longPressedCard) return;
+    const nextFavorite = !Boolean(longPressedCard.favorite);
+    await upsertCard({
+      ...longPressedCard,
+      favorite: nextFavorite,
+    });
+    showSnackbar(
+      nextFavorite ? "Moved to favorites" : "Removed from favorites"
+    );
+    setLongPressedCard(null);
+    notify(Haptics.NotificationFeedbackType.Success);
+  };
   const availableTags = useMemo(() => {
     if (!vault) {
       return [];
@@ -158,6 +185,21 @@ export default function Index() {
     setTagFilters((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+  };
+
+  const showSnackbar = (message: string) => {
+    setSnackbarMessage(message);
+    setSnackbarVisible(true);
+    if (snackbarTimer.current) {
+      clearTimeout(snackbarTimer.current);
+    }
+    snackbarTimer.current = setTimeout(() => {
+      setSnackbarVisible(false);
+    }, 2500);
+  };
+
+  const scrollToTop = () => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
   if (error) {
     return (
@@ -284,6 +326,7 @@ export default function Index() {
       ) : null}
 
       <FlatList
+        ref={listRef}
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
@@ -326,14 +369,39 @@ export default function Index() {
             >
               <GlassPanel style={styles.cardGlass}>
                 <View style={styles.cardRowHeader}>
-                  <Text style={styles.cardTitle}>
+                  <Text
+                    style={styles.cardTitle}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {item.nickname || "Untitled card"}
                   </Text>
-                  <Text style={styles.cardTagCount}>
-                    {item.tags.length
-                      ? `${item.tags.length} tag${item.tags.length > 1 ? "s" : ""}`
-                      : "No tags"}
-                  </Text>
+                  <Pressable
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      const nextFavorite = !item.favorite;
+                      impact(Haptics.ImpactFeedbackStyle.Light);
+                      upsertCard({ ...item, favorite: nextFavorite });
+                      showSnackbar(
+                        nextFavorite
+                          ? "Moved to favorites"
+                          : "Removed from favorites"
+                      );
+                    }}
+                    hitSlop={12}
+                    style={styles.cardTagRow}
+                    accessibilityLabel={
+                      item.favorite ? "Unfavorite" : "Favorite"
+                    }
+                  >
+                    <Ionicons
+                      name={item.favorite ? "heart" : "heart-outline"}
+                      size={14}
+                      color={
+                        item.favorite ? theme.colors.accent : theme.colors.muted
+                      }
+                    />
+                  </Pressable>
                 </View>
                 <Text style={styles.cardMeta}>
                   {item.issuer || "Issuer"} · {displayCardNumber(item)}
@@ -393,11 +461,15 @@ export default function Index() {
                     <Text style={styles.cardTitle}>
                       {longPressedCard.nickname || "Untitled card"}
                     </Text>
-                    <Text style={styles.cardTagCount}>
-                      {longPressedCard.tags.length
-                        ? `${longPressedCard.tags.length} tag${longPressedCard.tags.length > 1 ? "s" : ""}`
-                        : "No tags"}
-                    </Text>
+                    {longPressedCard.favorite ? (
+                      <View style={styles.cardTagRow}>
+                        <Ionicons
+                          name="heart"
+                          size={14}
+                          color={theme.colors.accent}
+                        />
+                      </View>
+                    ) : null}
                   </View>
                   <Text style={styles.cardMeta}>
                     {longPressedCard.issuer || "Issuer"} ·{" "}
@@ -457,6 +529,27 @@ export default function Index() {
 
                 <TouchableOpacity
                   style={styles.menuAction}
+                  onPress={handleToggleFavorite}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.menuActionContent}>
+                    <Text style={styles.menuActionText}>
+                      {longPressedCard?.favorite ? "Unfavorite" : "Favorite"}
+                    </Text>
+                    <Ionicons
+                      name={
+                        longPressedCard?.favorite ? "heart-outline" : "heart"
+                      }
+                      size={20}
+                      color={theme.colors.ink}
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                <View style={styles.menuDivider} />
+
+                <TouchableOpacity
+                  style={styles.menuAction}
                   onPress={handleEdit}
                   activeOpacity={0.8}
                 >
@@ -497,12 +590,37 @@ export default function Index() {
           )}
         </Pressable>
       </Modal>
+
+      {snackbarVisible ? (
+        <View style={styles.snackbarContainer} pointerEvents="box-none">
+          <View style={styles.snackbar}>
+            <Text style={styles.snackbarText}>{snackbarMessage}</Text>
+            {snackbarMessage === "Moved to favorites" ? (
+              <TouchableOpacity
+                style={styles.snackbarAction}
+                onPress={() => {
+                  setSnackbarVisible(false);
+                  scrollToTop();
+                }}
+              >
+                <Text style={styles.snackbarActionText}>View</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
     </Screen>
   );
 }
 
 const getStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
+    // cardTitleRow removed (no longer used)
+    cardTagRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -569,6 +687,8 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.bold,
       fontSize: 18,
       color: theme.colors.ink,
+      flex: 1,
+      minWidth: 0,
     },
     cardMeta: {
       color: theme.colors.muted,
@@ -597,11 +717,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: "space-between",
       gap: theme.spacing.sm,
     },
-    cardTagCount: {
-      color: theme.colors.muted,
-      fontFamily: theme.font.regular,
-      fontSize: 12,
-    },
+    // cardTagCount removed (showing only heart icon now)
     cardFooter: {
       marginTop: theme.spacing.sm,
       flexDirection: "row",
@@ -761,5 +877,50 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     menuDivider: {
       height: 1,
       backgroundColor: theme.colors.outline,
+    },
+    snackbarContainer: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.lg,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    snackbar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.lg,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 6,
+      maxWidth: 280,
+    },
+    snackbarText: {
+      color: theme.colors.ink,
+      fontFamily: theme.font.regular,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    snackbarAction: {
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.surfaceTint,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    snackbarActionText: {
+      color: theme.colors.accent,
+      fontFamily: theme.font.bold,
+      fontSize: 14,
     },
   });

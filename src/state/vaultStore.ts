@@ -42,6 +42,16 @@ function emptyVault(): VaultData {
   };
 }
 
+function compareCards(a: Card, b: Card) {
+  const af = a.favorite ? 1 : 0;
+  const bf = b.favorite ? 1 : 0;
+  if (af !== bf) {
+    // Favorites first
+    return bf - af;
+  }
+  return a.nickname.toLowerCase().localeCompare(b.nickname.toLowerCase());
+}
+
 export const useVaultStore = create<VaultState>((set, get) => ({
   vault: null,
   loading: false,
@@ -68,9 +78,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       }
 
       // Ensure cards are sorted alphabetically by nickname on load
-      vault.cards.sort((a, b) =>
-        a.nickname.toLowerCase().localeCompare(b.nickname.toLowerCase())
-      );
+      vault.cards.sort(compareCards);
 
       set({ vault, loading: false, error: null });
     } catch (error) {
@@ -103,10 +111,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       cards = [...vault.cards, created];
     }
 
-    // Sort alphabetically by nickname
-    cards.sort((a, b) =>
-      a.nickname.toLowerCase().localeCompare(b.nickname.toLowerCase())
-    );
+    // Sort favorites first, then alphabetically by nickname
+    cards.sort(compareCards);
 
     const next: VaultData = { ...vault, cards, updatedAt };
     await writeVaultData(next);
@@ -118,10 +124,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       return;
     }
     const cards = vault.cards.filter((item) => item.id !== cardId);
-    // Maintain internal sort just in case
-    cards.sort((a, b) =>
-      a.nickname.toLowerCase().localeCompare(b.nickname.toLowerCase())
-    );
+    // Maintain internal sort: favorites first, then nickname
+    cards.sort(compareCards);
 
     const next: VaultData = { ...vault, cards, updatedAt: nowIso() };
     await writeVaultData(next);

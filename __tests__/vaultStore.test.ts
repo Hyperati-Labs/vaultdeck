@@ -210,6 +210,54 @@ describe("vaultStore", () => {
     expect(cards.map((c) => c.nickname)).toEqual(["Alpha", "Beta"]);
   });
 
+  it("sorts favorites before others on load", async () => {
+    (vaultBlobExists as jest.Mock).mockResolvedValue(true);
+    (readVaultData as jest.Mock).mockResolvedValue({
+      version: 1,
+      updatedAt: "2024-01-01",
+      cards: [
+        { ...baseCard, id: "2", nickname: "Beta", favorite: true },
+        { ...baseCard, id: "1", nickname: "Alpha", favorite: false },
+        { ...baseCard, id: "3", nickname: "Gamma" },
+      ],
+    });
+
+    await useVaultStore.getState().loadVault();
+
+    const cards = useVaultStore.getState().vault?.cards ?? [];
+    expect(cards.map((c) => `${c.favorite ? "*" : ""}${c.nickname}`)).toEqual([
+      "*Beta",
+      "Alpha",
+      "Gamma",
+    ]);
+  });
+
+  it("persists favorite and sorts after upsert", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [
+          { ...baseCard, id: "1", nickname: "Alpha" },
+          { ...baseCard, id: "2", nickname: "Beta" },
+        ],
+      },
+    });
+
+    await useVaultStore.getState().upsertCard({
+      ...baseCard,
+      id: "2",
+      nickname: "Beta",
+      favorite: true,
+    });
+
+    const cards = useVaultStore.getState().vault?.cards ?? [];
+    expect(cards.map((c) => `${c.favorite ? "*" : ""}${c.nickname}`)).toEqual([
+      "*Beta",
+      "Alpha",
+    ]);
+  });
+
   it("resets vault data", async () => {
     (getOrCreateVaultKey as jest.Mock).mockResolvedValue("key");
 

@@ -1,0 +1,255 @@
+/**
+ * CardForm component styles
+ * Extracted from CardForm.tsx for better maintainability
+ */
+
+import { StyleSheet } from "react-native";
+import { useTheme } from "../../utils/useTheme";
+
+export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    content: {
+      paddingBottom: theme.spacing.xl * 2,
+    },
+    stickyHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: theme.spacing.md,
+      marginBottom: theme.spacing.xs,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    saveButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.accent,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    saveButtonDisabled: {
+      backgroundColor: theme.colors.surfaceTint,
+      opacity: 0.5,
+    },
+    section: {
+      marginBottom: theme.spacing.lg,
+    },
+    sectionTitle: {
+      fontFamily: theme.font.bold,
+      fontSize: 12,
+      color: theme.colors.accent,
+      textTransform: "uppercase",
+      letterSpacing: 1.5,
+      marginBottom: theme.spacing.md,
+      marginLeft: 4,
+    },
+    field: {
+      marginBottom: theme.spacing.lg,
+    },
+    fieldHalf: {
+      flex: 1,
+    },
+    label: {
+      fontFamily: theme.font.bold,
+      fontSize: 13,
+      color: theme.colors.muted,
+      marginBottom: theme.spacing.xs,
+      marginLeft: 4,
+    },
+    inputWrapper: {
+      backgroundColor: theme.colors.surfaceTint,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      paddingHorizontal: 16,
+      overflow: "hidden",
+    },
+    notesWrapper: {
+      paddingVertical: 12,
+    },
+    input: {
+      paddingVertical: 14,
+      color: theme.colors.ink,
+      fontFamily: theme.font.regular,
+      fontSize: 16,
+    },
+    cardNumberRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.sm,
+    },
+    cardNumberInput: {
+      flex: 1,
+    },
+    cardBrand: {
+      width: 32,
+      height: 24,
+      borderRadius: 4,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    row: {
+      flexDirection: "row",
+      gap: theme.spacing.md,
+    },
+    labelLowercase: {
+      fontFamily: theme.font.bold,
+      fontSize: 13,
+      color: theme.colors.muted,
+      marginBottom: theme.spacing.sm,
+      marginLeft: 4,
+    },
+    notesInput: {
+      minHeight: 100,
+      textAlignVertical: "top",
+      paddingTop: 0,
+    },
+    tagsContainer: {
+      minHeight: 44,
+      paddingHorizontal: 4,
+      marginTop: 4,
+    },
+    tagsFlow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: 12,
+    },
+    tagChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceTint,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      gap: 6,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    tagChipText: {
+      fontFamily: theme.font.regular,
+      fontSize: 15,
+      color: theme.colors.ink,
+      lineHeight: 18,
+      includeFontPadding: false,
+    },
+    addTagButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.colors.surfaceTint,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      gap: 6,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    addTagButtonText: {
+      fontFamily: theme.font.bold,
+      fontSize: 14,
+      color: theme.colors.accent,
+      lineHeight: 18,
+      includeFontPadding: false,
+    },
+    tagInputInline: {
+      minWidth: 100,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      color: theme.colors.ink,
+      fontFamily: theme.font.regular,
+      fontSize: 15,
+      backgroundColor: theme.colors.surfaceTint,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.accent,
+      includeFontPadding: false,
+    },
+    suggestions: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outline,
+    },
+    suggestionItem: {
+      backgroundColor: theme.colors.surface,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      marginRight: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    suggestionText: {
+      fontFamily: theme.font.regular,
+      fontSize: 13,
+      color: theme.colors.muted,
+    },
+    modalBackdrop: {
+      flex: 1,
+      justifyContent: "center",
+      padding: theme.spacing.xl,
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    modalSheet: {
+      borderRadius: theme.radius.xl,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.xl,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.2,
+      shadowRadius: 24,
+      elevation: 10,
+    },
+    modalTitle: {
+      fontFamily: theme.font.bold,
+      color: theme.colors.ink,
+      fontSize: 20,
+      marginBottom: theme.spacing.sm,
+      textAlign: "center",
+    },
+    modalBody: {
+      fontFamily: theme.font.regular,
+      color: theme.colors.muted,
+      textAlign: "center",
+      fontSize: 15,
+      lineHeight: 22,
+      marginBottom: theme.spacing.xl,
+    },
+    modalActions: {
+      flexDirection: "row",
+      gap: theme.spacing.md,
+    },
+    modalGhost: {
+      flex: 1,
+      borderRadius: theme.radius.md,
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceTint,
+    },
+    modalGhostText: {
+      color: theme.colors.ink,
+      fontFamily: theme.font.bold,
+    },
+    modalDanger: {
+      flex: 1,
+      borderRadius: theme.radius.md,
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+      backgroundColor: theme.colors.danger,
+    },
+    modalDangerText: {
+      color: theme.colors.surface,
+      fontFamily: theme.font.bold,
+    },
+  });

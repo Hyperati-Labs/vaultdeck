@@ -157,10 +157,22 @@ describe("vaultStorage web flow", () => {
       mod.VaultPassphraseRequiredError
     );
     await expect(mod.exportVaultBlob("pass")).rejects.toThrow(
-      mod.VaultCorruptError
+      mod.VaultMissingKeyError
     );
 
-    await expect(mod.importVaultBlob()).rejects.toThrow(mod.VaultCorruptError);
+    await expect(mod.importVaultBlob(undefined, "passphrase")).rejects.toThrow(
+      mod.VaultCorruptError
+    );
+  });
+
+  it("rejects web export when blob missing but key present", async () => {
+    const { mod } = loadVaultStorage({
+      os: "web",
+      secureItems: { vault_key_v1: "key" },
+    });
+    await expect(mod.exportVaultBlob("pass")).rejects.toThrow(
+      mod.VaultCorruptError
+    );
   });
 
   it("rejects invalid web backup envelopes", async () => {
@@ -412,7 +424,14 @@ describe("vaultStorage native flow", () => {
       fileExists: false,
     });
 
-    await expect(mod.importVaultBlob()).rejects.toThrow(mod.VaultCorruptError);
+    await expect(mod.importVaultBlob()).rejects.toThrow(
+      mod.VaultPassphraseRequiredError
+    );
+
+    // With passphrase but missing file should be corrupt
+    await expect(mod.importVaultBlob(undefined, "pass")).rejects.toThrow(
+      mod.VaultCorruptError
+    );
 
     const { mod: mod2 } = loadVaultStorage({
       os: "ios",
@@ -476,6 +495,23 @@ describe("vaultStorage native flow", () => {
       os: "ios",
       fileExists: true,
       readThrows: true,
+    });
+
+    await expect(mod.importVaultBlob(undefined, "pass")).rejects.toThrow(Error);
+  });
+
+  it("rejects invalid decrypted backup payload json", async () => {
+    const { mod } = loadVaultStorage({
+      os: "ios",
+      fileExists: true,
+      fileContent: JSON.stringify({
+        magic: "VAULTDECK_BACKUP",
+        version: 4,
+        kdf: "pbkdf2-sha256",
+        salt: "salt",
+        iterations: 120000,
+        payload: { version: 1, nonce: "n", ciphertext: "not-json" },
+      }),
     });
 
     await expect(mod.importVaultBlob(undefined, "pass")).rejects.toThrow(
