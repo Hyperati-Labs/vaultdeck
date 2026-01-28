@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Linking } from "react-native";
+import packageJson from "../../../../package.json";
 
 import { SettingsRow } from "../ui/common/SettingsRow";
 import { getSettingsStyles } from "../settingsStyles";
@@ -25,7 +26,7 @@ export function AboutSettingsSection(_props: any) {
             />
           </View>
           <Text style={styles.rowLabel}>Version</Text>
-          <Text style={styles.versionText}>v1.0.0</Text>
+          <Text style={styles.versionText}>v{packageJson.version}</Text>
         </View>
 
         <View style={styles.divider} />

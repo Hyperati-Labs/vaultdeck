@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-01-28
+
+### Fixed
+
+- Improve card form validation UX and error handling for user inputs.
+- Update tar dependency to 7.5.7 for security.
+
 ## [1.1.0] - 2026-01-26
 
 ### Added
