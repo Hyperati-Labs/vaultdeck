@@ -1,4 +1,4 @@
-import { useMemo as reactUseMemo } from "react";
+import { useMemo as reactUseMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -56,6 +56,10 @@ export default function CardForm({
 }: CardFormProps) {
   const theme = useTheme();
   const styles = getCardFormStyles(theme);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+  const [nicknameTouched, setNicknameTouched] = useState(false);
+  const [issuerTouched, setIssuerTouched] = useState(false);
+  const [cardholderTouched, setCardholderTouched] = useState(false);
 
   // Use extracted hooks for form state management
   const formState = useCardFormState(initial);
@@ -72,8 +76,16 @@ export default function CardForm({
     [formState.cardNumber]
   );
 
+  const shouldShowError = (
+    fieldKey: keyof typeof validation.errors,
+    opts: { hasValue: boolean; touched?: boolean }
+  ) =>
+    (attemptedSubmit || opts.touched || opts.hasValue) &&
+    Boolean(validation.errors[fieldKey]);
+
   // Handle form submission
   const handleSubmit = () => {
+    setAttemptedSubmit(true);
     if (!validation.canSubmit) return;
     const finalTags = [...tags.selectedTags];
     if (tags.tagInput.trim()) {
@@ -116,7 +128,7 @@ export default function CardForm({
             !validation.canSubmit && styles.saveButtonDisabled,
           ]}
           onPress={handleSubmit}
-          disabled={!validation.canSubmit}
+          accessibilityState={{ disabled: !validation.canSubmit }}
           accessibilityLabel={submitLabel}
         >
           <Ionicons
@@ -140,47 +152,103 @@ export default function CardForm({
 
           <View style={styles.field}>
             <Text style={styles.label}>Nickname</Text>
-            <View style={styles.inputWrapper}>
+            <View
+              style={[
+                styles.inputWrapper,
+                shouldShowError("nickname", {
+                  hasValue: !!formState.nickname,
+                  touched: nicknameTouched,
+                }) && styles.inputWrapperError,
+              ]}
+            >
               <TextInput
                 value={formState.nickname}
                 onChangeText={formState.setNickname}
+                onBlur={() => setNicknameTouched(true)}
                 style={styles.input}
                 placeholder="e.g. Personal Credit"
                 placeholderTextColor={theme.colors.muted + "80"}
               />
             </View>
+            {shouldShowError("nickname", {
+              hasValue: !!formState.nickname,
+              touched: nicknameTouched,
+            }) && (
+              <Text style={styles.errorText}>{validation.errors.nickname}</Text>
+            )}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Bank Name</Text>
-            <View style={styles.inputWrapper}>
+            <View
+              style={[
+                styles.inputWrapper,
+                shouldShowError("issuer", {
+                  hasValue: !!formState.issuer,
+                  touched: issuerTouched,
+                }) && styles.inputWrapperError,
+              ]}
+            >
               <TextInput
                 value={formState.issuer}
                 onChangeText={formState.setIssuer}
+                onBlur={() => setIssuerTouched(true)}
                 style={styles.input}
                 placeholder="e.g. HDFC Bank"
                 placeholderTextColor={theme.colors.muted + "80"}
               />
             </View>
+            {shouldShowError("issuer", {
+              hasValue: !!formState.issuer,
+              touched: issuerTouched,
+            }) && (
+              <Text style={styles.errorText}>{validation.errors.issuer}</Text>
+            )}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Cardholder Name</Text>
-            <View style={styles.inputWrapper}>
+            <View
+              style={[
+                styles.inputWrapper,
+                shouldShowError("cardholderName", {
+                  hasValue: !!formState.cardholderName,
+                  touched: cardholderTouched,
+                }) && styles.inputWrapperError,
+              ]}
+            >
               <TextInput
                 value={formState.cardholderName}
                 onChangeText={formState.setCardholderName}
+                onBlur={() => setCardholderTouched(true)}
                 style={styles.input}
                 placeholder="Name as on card"
                 placeholderTextColor={theme.colors.muted + "80"}
                 autoCapitalize="characters"
               />
             </View>
+            {shouldShowError("cardholderName", {
+              hasValue: !!formState.cardholderName,
+              touched: cardholderTouched,
+            }) && (
+              <Text style={styles.errorText}>
+                {validation.errors.cardholderName}
+              </Text>
+            )}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Card Number</Text>
-            <View style={styles.inputWrapper}>
+            <View
+              style={[
+                styles.inputWrapper,
+                shouldShowError("cardNumber", {
+                  hasValue: !!formatting.formatCardNumberForDisplay(
+                    formState.cardNumber
+                  ),
+                }) && styles.inputWrapperError,
+              ]}
+            >
               <View style={styles.cardNumberRow}>
                 <TextInput
                   value={formatting.formatCardNumberForDisplay(
@@ -200,11 +268,27 @@ export default function CardForm({
                 </View>
               </View>
             </View>
+            {shouldShowError("cardNumber", {
+              hasValue: !!formatting.formatCardNumberForDisplay(
+                formState.cardNumber
+              ),
+            }) && (
+              <Text style={styles.errorText}>
+                {validation.errors.cardNumber}
+              </Text>
+            )}
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Expiry Date</Text>
-            <View style={styles.inputWrapper}>
+            <View
+              style={[
+                styles.inputWrapper,
+                shouldShowError("expiryDate", {
+                  hasValue: !!formState.expiryDate,
+                }) && styles.inputWrapperError,
+              ]}
+            >
               <TextInput
                 value={formState.expiryDate}
                 onChangeText={(text) => {
@@ -217,6 +301,13 @@ export default function CardForm({
                 keyboardType="number-pad"
               />
             </View>
+            {shouldShowError("expiryDate", {
+              hasValue: !!formState.expiryDate,
+            }) && (
+              <Text style={styles.errorText}>
+                {validation.errors.expiryDate}
+              </Text>
+            )}
           </View>
 
           <View style={styles.field}>

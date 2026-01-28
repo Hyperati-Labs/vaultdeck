@@ -56,9 +56,6 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     field: {
       marginBottom: theme.spacing.lg,
     },
-    fieldHalf: {
-      flex: 1,
-    },
     label: {
       fontFamily: theme.font.bold,
       fontSize: 13,
@@ -73,6 +70,10 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       borderColor: theme.colors.outline,
       paddingHorizontal: 16,
       overflow: "hidden",
+    },
+    inputWrapperError: {
+      borderColor: theme.colors.danger,
+      backgroundColor: theme.colors.accentSoft,
     },
     notesWrapper: {
       paddingVertical: 12,
@@ -97,17 +98,6 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: 4,
       alignItems: "center",
       justifyContent: "center",
-    },
-    row: {
-      flexDirection: "row",
-      gap: theme.spacing.md,
-    },
-    labelLowercase: {
-      fontFamily: theme.font.bold,
-      fontSize: 13,
-      color: theme.colors.muted,
-      marginBottom: theme.spacing.sm,
-      marginLeft: 4,
     },
     notesInput: {
       minHeight: 100,
@@ -194,6 +184,13 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.regular,
       fontSize: 13,
       color: theme.colors.muted,
+    },
+    errorText: {
+      marginTop: 6,
+      marginLeft: 4,
+      fontFamily: theme.font.regular,
+      fontSize: 12.5,
+      color: theme.colors.danger,
     },
     modalBackdrop: {
       flex: 1,
