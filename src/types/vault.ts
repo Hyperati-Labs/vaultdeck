@@ -18,4 +18,5 @@ export type VaultData = {
   version: 1;
   cards: Card[];
   updatedAt: string;
+  tagColors?: Record<string, string>;
 };

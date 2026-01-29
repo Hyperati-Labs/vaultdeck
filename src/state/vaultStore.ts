@@ -24,6 +24,7 @@ type VaultState = {
   loadVault: () => Promise<void>;
   upsertCard: (card: Card) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
+  setTagColor: (tag: string, color?: string) => Promise<void>;
   resetVault: () => Promise<void>;
   exportVault: (passphrase: string) => Promise<string>;
   importVault: (sourceUri?: string, passphrase?: string) => Promise<void>;
@@ -39,6 +40,7 @@ function emptyVault(): VaultData {
     version: 1,
     cards: [],
     updatedAt: nowIso(),
+    tagColors: {},
   };
 }
 
@@ -75,6 +77,11 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         await writeVaultData(next);
         set({ vault: next, loading: false, error: null });
         return;
+      }
+
+      // Ensure tagColors map exists for legacy data
+      if (!vault.tagColors) {
+        vault.tagColors = {};
       }
 
       // Ensure cards are sorted alphabetically by nickname on load
@@ -158,4 +165,22 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     await get().loadVault();
   },
   clearVaultData: () => set({ vault: null }),
+  setTagColor: async (tag, color) => {
+    const { vault } = get();
+    if (!vault) return;
+    const tagKey = tag.trim().toLowerCase();
+    const nextColors = { ...(vault.tagColors ?? {}) };
+    if (!color) {
+      delete nextColors[tagKey];
+    } else {
+      nextColors[tagKey] = color;
+    }
+    const next: VaultData = {
+      ...vault,
+      tagColors: nextColors,
+      updatedAt: nowIso(),
+    };
+    await writeVaultData(next);
+    set({ vault: next });
+  },
 }));

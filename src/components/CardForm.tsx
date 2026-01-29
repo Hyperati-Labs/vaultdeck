@@ -14,11 +14,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
 import CardBrandIcon from "./CardBrandIcon";
+import { TagColorPicker } from "./TagColorPicker";
 
 import type { Card } from "../types/vault";
 import { deriveLast4 } from "../utils/cardFormat";
 import { detectCardType } from "../utils/cardType";
 import { useTheme } from "../utils/useTheme";
+import { getTagColor } from "../utils/tagColors";
 import { useHaptics } from "../utils/useHaptics";
 import BackButton from "./BackButton";
 import { useVaultStore } from "../state/vaultStore";
@@ -60,12 +62,15 @@ export default function CardForm({
   const [nicknameTouched, setNicknameTouched] = useState(false);
   const [issuerTouched, setIssuerTouched] = useState(false);
   const [cardholderTouched, setCardholderTouched] = useState(false);
+  const [colorPickerTarget, setColorPickerTarget] = useState<string | null>(
+    null
+  );
 
   // Use extracted hooks for form state management
   const formState = useCardFormState(initial);
-  const { vault } = useVaultStore();
+  const { vault, setTagColor } = useVaultStore();
   const tags = useCardTags(initial?.tags, vault ?? undefined);
-  const validation = useCardValidation(formState, initial);
+  const validation = useCardValidation(formState, initial, tags.selectedTags);
   const discard = useDiscardWarning(validation.isDirty);
   const formatting = useCardFormatting();
   const { impact } = useHaptics();
@@ -329,27 +334,53 @@ export default function CardForm({
             <Text style={styles.label}>Tags</Text>
             <View style={styles.tagsContainer}>
               <View style={styles.tagsFlow}>
-                {tags.selectedTags.map((tag) => (
-                  <View key={tag} style={styles.tagChip}>
-                    <Text style={styles.tagChipText}>#{tag}</Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        impact(Haptics.ImpactFeedbackStyle.Light);
-                        tags.removeTag(tag);
-                      }}
+                {tags.selectedTags.map((tag) => {
+                  const userColor = vault?.tagColors?.[tag];
+                  const colors = getTagColor(tag, theme, userColor);
+                  return (
+                    <View
+                      key={tag}
+                      style={[
+                        styles.tagChip,
+                        {
+                          backgroundColor: colors.bg,
+                          borderColor: colors.border,
+                        },
+                      ]}
                     >
-                      <Ionicons
-                        name="close"
-                        size={14}
-                        color={theme.colors.muted}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                      <Text
+                        style={[styles.tagChipText, { color: colors.text }]}
+                      >
+                        #{tag}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          setColorPickerTarget(tag);
+                        }}
+                      >
+                        <Ionicons
+                          name="color-palette-outline"
+                          size={16}
+                          color={colors.text}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          impact(Haptics.ImpactFeedbackStyle.Light);
+                          tags.removeTag(tag);
+                        }}
+                      >
+                        <Ionicons name="close" size={14} color={colors.text} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
 
                 {tags.tagInputVisible ? (
                   <TextInput
                     ref={tags.tagInputRef}
+                    autoFocus
                     value={tags.tagInput}
                     onChangeText={tags.handleTagInput}
                     onSubmitEditing={() =>
@@ -359,7 +390,20 @@ export default function CardForm({
                     onBlur={() => {
                       if (!tags.tagInput.trim()) tags.setTagInputVisible(false);
                     }}
-                    style={styles.tagInputInline}
+                    style={[
+                      styles.tagInputInline,
+                      (() => {
+                        const colors = getTagColor(
+                          tags.tagInput || "tag",
+                          theme
+                        );
+                        return {
+                          backgroundColor: colors.bg,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        };
+                      })(),
+                    ]}
                     placeholder="tag name..."
                     placeholderTextColor={theme.colors.muted + "80"}
                     autoCapitalize="none"
@@ -386,19 +430,76 @@ export default function CardForm({
               {tags.tagInputVisible && tags.tagSuggestions.length > 0 && (
                 <View style={styles.suggestions}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {tags.tagSuggestions.map((suggestion) => (
-                      <TouchableOpacity
-                        key={suggestion}
-                        style={styles.suggestionItem}
-                        onPress={() => {
-                          impact(Haptics.ImpactFeedbackStyle.Light);
-                          tags.addTag(suggestion);
-                        }}
-                      >
-                        <Text style={styles.suggestionText}>#{suggestion}</Text>
-                      </TouchableOpacity>
-                    ))}
+                    {tags.tagSuggestions.map((suggestion) => {
+                      const userColor = vault?.tagColors?.[suggestion];
+                      const colors = getTagColor(suggestion, theme, userColor);
+                      return (
+                        <TouchableOpacity
+                          key={suggestion}
+                          style={[
+                            styles.suggestionItem,
+                            {
+                              backgroundColor: colors.bg,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                          onPress={() => {
+                            impact(Haptics.ImpactFeedbackStyle.Light);
+                            tags.addTag(suggestion);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.suggestionText,
+                              { color: colors.text },
+                            ]}
+                          >
+                            #{suggestion}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </ScrollView>
+                </View>
+              )}
+
+              {tags.availableTags.length > 0 && (
+                <View style={styles.existingTags}>
+                  <View style={styles.existingTagsHeader}>
+                    <Text style={styles.existingTagsTitle}>Tap to add</Text>
+                  </View>
+                  <View style={styles.existingTagsFlow}>
+                    {tags.availableTags.map((tag) => {
+                      const userColor = vault?.tagColors?.[tag];
+                      const colors = getTagColor(tag, theme, userColor);
+                      return (
+                        <TouchableOpacity
+                          key={tag}
+                          style={[
+                            styles.existingTagChip,
+                            {
+                              backgroundColor: colors.bg,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                          onPress={() => {
+                            impact(Haptics.ImpactFeedbackStyle.Light);
+                            tags.addTag(tag);
+                          }}
+                        >
+                          <Ionicons name="add" size={14} color={colors.text} />
+                          <Text
+                            style={[
+                              styles.existingTagText,
+                              { color: colors.text },
+                            ]}
+                          >
+                            #{tag}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
               )}
             </View>
@@ -435,6 +536,25 @@ export default function CardForm({
           </View>
         </View>
       </Modal>
+
+      <TagColorPicker
+        visible={colorPickerTarget !== null}
+        tag={colorPickerTarget}
+        currentColor={
+          colorPickerTarget ? vault?.tagColors?.[colorPickerTarget] : undefined
+        }
+        onSelect={(color) => {
+          if (!colorPickerTarget) return;
+          setTagColor(colorPickerTarget, color);
+          setColorPickerTarget(null);
+        }}
+        onReset={() => {
+          if (!colorPickerTarget) return;
+          setTagColor(colorPickerTarget, undefined);
+          setColorPickerTarget(null);
+        }}
+        onClose={() => setColorPickerTarget(null)}
+      />
     </KeyboardAvoidingView>
   );
 }

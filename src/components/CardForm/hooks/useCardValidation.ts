@@ -48,7 +48,8 @@ const validateExpiryNotExpired = (expiryDate: string) => {
 
 export function useCardValidation(
   state: CardFormState,
-  initial?: Partial<Card>
+  initial?: Partial<Card>,
+  selectedTagsOverride?: string[]
 ) {
   const errors = useMemo<CardValidationErrors>(() => {
     const nicknameValid = validateNickname(state.nickname);
@@ -98,6 +99,10 @@ export function useCardValidation(
   const canSubmit = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
   const isDirty = useMemo(() => {
+    const currentTags =
+      selectedTagsOverride !== undefined
+        ? selectedTagsOverride
+        : state.selectedTags;
     return (
       state.nickname !== (initial?.nickname ?? "") ||
       state.issuer !== (initial?.issuer ?? "") ||
@@ -108,9 +113,9 @@ export function useCardValidation(
           ? `${initial.expiryMonth}/${initial.expiryYear}`
           : "") ||
       state.notes !== (initial?.notes ?? "") ||
-      JSON.stringify(state.selectedTags) !== JSON.stringify(initial?.tags ?? [])
+      JSON.stringify(currentTags) !== JSON.stringify(initial?.tags ?? [])
     );
-  }, [state, initial]);
+  }, [state, initial, selectedTagsOverride]);
 
   return {
     canSubmit,

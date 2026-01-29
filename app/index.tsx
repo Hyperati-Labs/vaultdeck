@@ -26,6 +26,7 @@ import { useTheme } from "../src/utils/useTheme";
 import { generateId } from "../src/utils/id";
 import { Card } from "../src/types/vault";
 import { useHaptics } from "../src/utils/useHaptics";
+import { getTagColor } from "../src/utils/tagColors";
 
 export default function Index() {
   const theme = useTheme();
@@ -172,12 +173,9 @@ export default function Index() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [vault]);
   const orderedTags = useMemo(() => {
-    if (tagFilters.length === 0) {
-      return availableTags;
-    }
-    const active = availableTags.filter((t) => tagFilters.includes(t));
-    const others = availableTags.filter((t) => !tagFilters.includes(t));
-    return [...active, ...others];
+    const active = tagFilters.filter((t) => availableTags.includes(t));
+    const inactive = availableTags.filter((t) => !tagFilters.includes(t));
+    return [...active, ...inactive];
   }, [availableTags, tagFilters]);
 
   const toggleTagFilter = (tag: string) => {
@@ -307,6 +305,21 @@ export default function Index() {
                 key={tag}
                 style={[
                   styles.filterChip,
+                  (() => {
+                    const colors = getTagColor(
+                      tag,
+                      theme,
+                      vault?.tagColors?.[tag]
+                    );
+                    return {
+                      backgroundColor: tagFilters.includes(tag)
+                        ? colors.activeBg
+                        : colors.bg,
+                      borderColor: tagFilters.includes(tag)
+                        ? colors.activeBorder
+                        : colors.border,
+                    };
+                  })(),
                   tagFilters.includes(tag) && styles.filterChipActive,
                 ]}
                 onPress={() => toggleTagFilter(tag)}
@@ -314,7 +327,18 @@ export default function Index() {
                 <Text
                   style={[
                     styles.filterChipText,
-                    tagFilters.includes(tag) && styles.filterChipTextActive,
+                    (() => {
+                      const colors = getTagColor(
+                        tag,
+                        theme,
+                        vault?.tagColors?.[tag]
+                      );
+                      return {
+                        color: tagFilters.includes(tag)
+                          ? colors.activeText
+                          : colors.text,
+                      };
+                    })(),
                   ]}
                 >
                   {`#${tag.toLowerCase()}`}
@@ -792,12 +816,11 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.outline,
       backgroundColor: theme.colors.surfaceTint,
+      opacity: 0.65,
     },
     filterChipActive: {
-      borderColor: theme.colors.accent,
-      backgroundColor: theme.isDark
-        ? "rgba(208, 123, 47, 0.15)"
-        : "rgba(208, 123, 47, 0.1)",
+      borderWidth: 1,
+      opacity: 1,
     },
     filterChipText: {
       fontFamily: theme.font.bold,
@@ -805,10 +828,6 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.ink,
       opacity: 0.8,
       includeFontPadding: false,
-    },
-    filterChipTextActive: {
-      color: theme.colors.accent,
-      opacity: 1,
     },
     clearChip: {
       flexDirection: "row",

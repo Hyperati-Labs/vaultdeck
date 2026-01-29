@@ -32,6 +32,14 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
   }, [vault]);
 
   /**
+   * Vault tags that are not yet selected
+   */
+  const availableTags = useMemo(
+    () => allVaultTags.filter((t) => !selectedTags.includes(t)),
+    [allVaultTags, selectedTags]
+  );
+
+  /**
    * Get filtered suggestions matching current input
    * Excludes already selected tags
    */
@@ -48,7 +56,10 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
    */
   useEffect(() => {
     if (tagInputVisible) {
-      tagInputRef.current?.focus();
+      const timer = setTimeout(() => {
+        tagInputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [tagInputVisible]);
 
@@ -98,6 +109,7 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
     setTagInputVisible,
     tagInputRef,
     allVaultTags,
+    availableTags,
     tagSuggestions,
     handleTagInput,
     addTag,

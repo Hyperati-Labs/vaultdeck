@@ -24,6 +24,7 @@ import {
 import { requireSensitiveAuth } from "../../src/utils/sensitiveAuth";
 import { useHaptics } from "../../src/utils/useHaptics";
 import { useTheme } from "../../src/utils/useTheme";
+import { getTagColor } from "../../src/utils/tagColors";
 
 import VirtualCard from "../../src/components/VirtualCard";
 
@@ -252,13 +253,29 @@ export default function CardDetailScreen() {
             <View style={styles.tagsContainer}>
               <Text style={styles.sectionHeader}>Tags</Text>
               <View style={styles.tagRow}>
-                {card.tags.map((tag) => (
-                  <View key={tag} style={styles.tagPill}>
-                    <Text
-                      style={styles.tagText}
-                    >{`#${tag.toLowerCase()}`}</Text>
-                  </View>
-                ))}
+                {card.tags.map((tag) => {
+                  const colors = getTagColor(
+                    tag,
+                    theme,
+                    vault?.tagColors?.[tag]
+                  );
+                  return (
+                    <View
+                      key={tag}
+                      style={[
+                        styles.tagPill,
+                        {
+                          backgroundColor: colors.bg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.tagText, { color: colors.text }]}>
+                        #{tag.toLowerCase()}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           ) : null}
@@ -392,14 +409,11 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingVertical: 5,
       paddingHorizontal: 10,
       borderRadius: 8,
-      backgroundColor: theme.colors.surfaceTint,
       borderWidth: 1,
-      borderColor: theme.colors.outline,
     },
     tagText: {
       fontSize: 12,
       fontFamily: theme.font.bold,
-      color: theme.colors.muted,
       opacity: 0.8,
     },
     muted: {
