@@ -1,14 +1,20 @@
 import { Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 
-import { SegmentedControl } from "../ui/common/SegmentedControl";
 import { getSettingsStyles } from "../settingsStyles";
 import { useTheme } from "../../../utils/useTheme";
 import { useThemeStore, type ThemePreference } from "../../../state/themeStore";
+import { SettingsRow } from "../ui/common/SettingsRow";
+import { OptionPickerModal } from "../ui/common/OptionPickerModal";
 
 export function AppearanceSettingsSection(_props: any) {
   const theme = useTheme();
   const styles = getSettingsStyles(theme);
   const { preference, setPreference } = useThemeStore();
+  const router = useRouter();
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
 
   const themes: { label: string; value: ThemePreference }[] = [
     { label: "Auto", value: "system" },
@@ -16,19 +22,53 @@ export function AppearanceSettingsSection(_props: any) {
     { label: "Dark", value: "dark" },
   ];
 
+  const currentThemeLabel =
+    themes.find((t) => t.value === preference)?.label ?? "Auto";
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Appearance</Text>
       <View style={styles.group}>
-        <View style={styles.rowColumn}>
-          <Text style={styles.rowLabel}>Theme</Text>
-          <SegmentedControl
-            options={themes}
-            value={preference}
-            onChange={(value: ThemePreference) => setPreference(value)}
-          />
-        </View>
+        <SettingsRow
+          label="Theme"
+          subLabel={currentThemeLabel}
+          iconName="contrast-outline"
+          iconColor={theme.colors.accent}
+          rightContent={
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.colors.muted}
+            />
+          }
+          onPress={() => setThemePickerOpen(true)}
+        />
+
+        <View style={styles.divider} />
+
+        <SettingsRow
+          label="Manage Tags"
+          iconName="pricetags-outline"
+          iconColor={theme.colors.accent}
+          rightContent={
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.colors.muted}
+            />
+          }
+          onPress={() => router.push("/settings/tags")}
+        />
       </View>
+
+      <OptionPickerModal
+        title="Theme"
+        visible={themePickerOpen}
+        options={themes}
+        value={preference}
+        onSelect={(value: ThemePreference) => setPreference(value)}
+        onClose={() => setThemePickerOpen(false)}
+      />
     </View>
   );
 }

@@ -22,7 +22,7 @@ export function AboutSettingsSection(_props: any) {
             <Ionicons
               name="information-circle-outline"
               size={20}
-              color={theme.colors.ink}
+              color={theme.colors.accent}
             />
           </View>
           <Text style={styles.rowLabel}>Version</Text>
@@ -34,11 +34,12 @@ export function AboutSettingsSection(_props: any) {
         <SettingsRow
           label="GitHub"
           iconName="logo-github"
+          iconColor={theme.colors.accent}
           rightContent={
             <Ionicons
               name="open-outline"
               size={18}
-              color={theme.colors.muted}
+              color={theme.colors.accent}
             />
           }
           onPress={() => Linking.openURL(githubUrl)}

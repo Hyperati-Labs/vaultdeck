@@ -21,6 +21,7 @@ type SettingsRowProps = {
   pressable?: boolean;
   labelColor?: string;
   iconColor?: string;
+  compact?: boolean;
 } & Partial<TouchableOpacityProps>;
 
 export function SettingsRow({
@@ -34,6 +35,7 @@ export function SettingsRow({
   pressable = false,
   labelColor,
   iconColor,
+  compact = false,
   ...touchableProps
 }: SettingsRowProps) {
   const theme = useTheme();
@@ -50,7 +52,7 @@ export function SettingsRow({
     ) : null);
 
   const content = (
-    <View style={styles.row}>
+    <View style={[styles.row, compact && styles.rowCompact]}>
       <View style={styles.rowIcon}>{leadingIcon}</View>
       <View style={styles.rowContent}>
         <Text style={[styles.rowLabel, labelColor && { color: labelColor }]}>
@@ -92,6 +94,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingHorizontal: theme.spacing.md,
       minHeight: 56,
       backgroundColor: theme.colors.surface,
+    },
+    rowCompact: {
+      paddingVertical: theme.spacing.xs,
+      minHeight: 44,
     },
     rowIcon: {
       marginRight: theme.spacing.md,

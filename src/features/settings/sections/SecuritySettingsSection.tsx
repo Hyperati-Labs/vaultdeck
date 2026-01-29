@@ -1,12 +1,14 @@
 import { Text, View, Switch } from "react-native";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useState, useMemo } from "react";
 
 import { SettingsRow } from "../ui/common/SettingsRow";
-import { SegmentedControl } from "../ui/common/SegmentedControl";
 import { getSettingsStyles } from "../settingsStyles";
 import { useTheme } from "../../../utils/useTheme";
 import { useAuthStore } from "../../../state/authStore";
+import { useSettingsStore } from "../../../state/settingsStore";
+import { OptionPickerModal } from "../ui/common/OptionPickerModal";
 
 export function SecuritySettingsSection(_props: any) {
   const theme = useTheme();
@@ -19,13 +21,38 @@ export function SecuritySettingsSection(_props: any) {
     biometricEnabled,
     setBiometricEnabled,
   } = useAuthStore();
+  const { clipboardTimeoutSeconds, setClipboardTimeoutSeconds } =
+    useSettingsStore();
+  const [autoLockPickerOpen, setAutoLockPickerOpen] = useState(false);
+  const [clipboardPickerOpen, setClipboardPickerOpen] = useState(false);
 
-  const timeouts = [
-    { label: "Instant", value: 0 },
-    { label: "30s", value: 30 },
-    { label: "1m", value: 60 },
-    { label: "5m", value: 300 },
-  ];
+  const timeouts = useMemo(
+    () => [
+      { label: "Instant", value: 0 },
+      { label: "30s", value: 30 },
+      { label: "1m", value: 60 },
+      { label: "5m", value: 300 },
+    ],
+    []
+  );
+
+  const currentTimeoutLabel =
+    timeouts.find((t) => t.value === autoLockSeconds)?.label ??
+    `${autoLockSeconds}s`;
+
+  const clipboardTimeouts = useMemo(
+    () => [
+      { label: "10s", value: 10 },
+      { label: "30s", value: 30 },
+      { label: "1m", value: 60 },
+      { label: "5m", value: 300 },
+    ],
+    []
+  );
+
+  const currentClipboardLabel =
+    clipboardTimeouts.find((o) => o.value === clipboardTimeoutSeconds)?.label ??
+    `${clipboardTimeoutSeconds}s`;
 
   return (
     <View style={styles.section}>
@@ -35,6 +62,7 @@ export function SecuritySettingsSection(_props: any) {
           <SettingsRow
             label="Change PIN"
             iconName="keypad-outline"
+            iconColor={theme.colors.accent}
             rightContent={
               <Ionicons
                 name="chevron-forward"
@@ -49,10 +77,8 @@ export function SecuritySettingsSection(_props: any) {
 
         <SettingsRow
           label="Biometrics"
-          subLabel={
-            biometricAvailable ? "Unlock with FaceID/TouchID" : "Not available"
-          }
           iconName="finger-print-outline"
+          iconColor={theme.colors.accent}
           rightContent={
             <Switch
               value={biometricEnabled}
@@ -65,19 +91,61 @@ export function SecuritySettingsSection(_props: any) {
               thumbColor={theme.colors.surface}
             />
           }
+          compact
         />
 
         <View style={styles.divider} />
 
-        <View style={styles.rowColumn}>
-          <Text style={styles.rowLabel}>Auto-lock</Text>
-          <SegmentedControl
-            options={timeouts}
-            value={autoLockSeconds}
-            onChange={setAutoLockSeconds}
-          />
-        </View>
+        <SettingsRow
+          label="Auto-lock"
+          iconName="lock-closed-outline"
+          subLabel={currentTimeoutLabel}
+          iconColor={theme.colors.accent}
+          rightContent={
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.colors.muted}
+            />
+          }
+          onPress={() => setAutoLockPickerOpen(true)}
+        />
+
+        <View style={styles.divider} />
+
+        <SettingsRow
+          label="Clipboard timeout"
+          iconName="time-outline"
+          subLabel={currentClipboardLabel}
+          iconColor={theme.colors.accent}
+          rightContent={
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.colors.muted}
+            />
+          }
+          onPress={() => setClipboardPickerOpen(true)}
+        />
       </View>
+
+      <OptionPickerModal
+        title="Auto-lock"
+        visible={autoLockPickerOpen}
+        options={timeouts}
+        value={autoLockSeconds}
+        onSelect={setAutoLockSeconds}
+        onClose={() => setAutoLockPickerOpen(false)}
+      />
+
+      <OptionPickerModal
+        title="Clipboard timeout"
+        visible={clipboardPickerOpen}
+        options={clipboardTimeouts}
+        value={clipboardTimeoutSeconds}
+        onSelect={setClipboardTimeoutSeconds}
+        onClose={() => setClipboardPickerOpen(false)}
+      />
     </View>
   );
 }

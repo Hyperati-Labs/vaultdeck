@@ -382,4 +382,158 @@ describe("vaultStore", () => {
     const state = useVaultStore.getState().vault;
     expect(state?.tagColors?.fresh).toBe("#00ff00");
   });
+
+  it("ignores empty tag inputs for setTagColor", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [{ ...baseCard }],
+      },
+    });
+    await useVaultStore.getState().setTagColor("   ", "#ffffff");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("renames tags and moves color when needed", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        tagColors: { old: "#123456" },
+        cards: [
+          { ...baseCard, tags: ["old"] },
+          { ...baseCard, id: "2", tags: ["other", "old"] },
+        ],
+      },
+    });
+
+    await useVaultStore.getState().renameTag("old", "new");
+
+    const state = useVaultStore.getState().vault;
+    const tagColors = state?.tagColors ?? {};
+    expect(tagColors.new).toBe("#123456");
+    expect(tagColors.old).toBeUndefined();
+    state?.cards.forEach((card) => {
+      expect(card.tags.includes("old")).toBe(false);
+    });
+  });
+
+  it("renaming does not overwrite existing target color", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        tagColors: { from: "#111111", to: "#999999" },
+        cards: [{ ...baseCard, tags: ["from"] }],
+      },
+    });
+
+    await useVaultStore.getState().renameTag("from", "to");
+
+    const tagColors = useVaultStore.getState().vault?.tagColors ?? {};
+    expect(tagColors.to).toBe("#999999");
+    expect(tagColors.from).toBeUndefined();
+  });
+
+  it("renames when tagColors map is absent", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [{ ...baseCard, tags: ["raw"] }],
+      },
+    });
+    await useVaultStore.getState().renameTag("raw", "clean");
+    const tags = useVaultStore.getState().vault?.cards[0].tags ?? [];
+    expect(tags).toContain("clean");
+  });
+
+  it("no-ops rename when source and target are equal", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [{ ...baseCard, tags: ["same"] }],
+      },
+    });
+    await useVaultStore.getState().renameTag("same", "same");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("no-ops rename when vault is missing", async () => {
+    useVaultStore.setState({ vault: null });
+    await useVaultStore.getState().renameTag("a", "b");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("no-ops rename when from is empty", async () => {
+    useVaultStore.setState({
+      vault: { version: 1, updatedAt: "t", cards: [{ ...baseCard }] },
+    });
+    await useVaultStore.getState().renameTag("   ", "b");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("deletes tags from cards and colors", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        tagColors: { doomed: "#ff0000" },
+        cards: [
+          { ...baseCard, tags: ["doomed", "keep"] },
+          { ...baseCard, id: "2", tags: ["keep"] },
+        ],
+      },
+    });
+
+    await useVaultStore.getState().deleteTag("doomed");
+    const state = useVaultStore.getState().vault;
+    expect(state?.tagColors?.doomed).toBeUndefined();
+    expect(state?.cards[0].tags).toEqual(["keep"]);
+  });
+
+  it("no-ops deleteTag for empty input", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [{ ...baseCard, tags: ["keep"] }],
+      },
+    });
+    await useVaultStore.getState().deleteTag("   ");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("no-ops deleteTag when vault missing", async () => {
+    useVaultStore.setState({ vault: null });
+    await useVaultStore.getState().deleteTag("any");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("deletes tag when tagColors map is absent", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [{ ...baseCard, tags: ["solo"] }],
+      },
+    });
+    await useVaultStore.getState().deleteTag("solo");
+    expect(useVaultStore.getState().vault?.cards[0].tags).toEqual([]);
+  });
+
+  it("removes color when setTagColor called without color", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        tagColors: { red: "#ff0000" },
+        cards: [{ ...baseCard }],
+      },
+    });
+    await useVaultStore.getState().setTagColor("red");
+    expect(useVaultStore.getState().vault?.tagColors?.red).toBeUndefined();
+  });
 });

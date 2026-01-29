@@ -311,6 +311,11 @@ export default function Index() {
                       theme,
                       vault?.tagColors?.[tag]
                     );
+                    const active = tagFilters.includes(tag);
+                    const dim =
+                      tagFilters.length > 0 && !active
+                        ? { opacity: 0.7 }
+                        : null;
                     return {
                       backgroundColor: tagFilters.includes(tag)
                         ? colors.activeBg
@@ -318,6 +323,7 @@ export default function Index() {
                       borderColor: tagFilters.includes(tag)
                         ? colors.activeBorder
                         : colors.border,
+                      ...dim,
                     };
                   })(),
                   tagFilters.includes(tag) && styles.filterChipActive,
@@ -799,7 +805,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
         : "rgba(208, 123, 47, 0.3)",
     },
     quickFilters: {
-      marginTop: theme.spacing.md,
+      marginTop: theme.spacing.sm,
       marginHorizontal: -theme.spacing.lg, // Bleed to edges
     },
     quickFiltersScroll: {
@@ -810,13 +816,13 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingBottom: 4, // Space for shadow/elevation if needed
     },
     filterChip: {
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 20,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: theme.colors.outline,
       backgroundColor: theme.colors.surfaceTint,
-      opacity: 0.65,
+      opacity: 1,
     },
     filterChipActive: {
       borderWidth: 1,

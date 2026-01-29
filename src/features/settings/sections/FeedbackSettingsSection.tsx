@@ -19,8 +19,8 @@ export function FeedbackSettingsSection(_props: any) {
       <View style={styles.group}>
         <SettingsRow
           label="Haptics"
-          subLabel="Vibration feedback on actions"
           iconName="pulse-outline"
+          iconColor={theme.colors.accent}
           rightContent={
             <Switch
               value={hapticsEnabled}
@@ -32,6 +32,7 @@ export function FeedbackSettingsSection(_props: any) {
               thumbColor={theme.colors.surface}
             />
           }
+          compact
         />
       </View>
     </View>

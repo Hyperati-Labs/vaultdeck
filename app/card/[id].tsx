@@ -408,11 +408,11 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     tagPill: {
       paddingVertical: 5,
       paddingHorizontal: 10,
-      borderRadius: 8,
+      borderRadius: 16,
       borderWidth: 1,
     },
     tagText: {
-      fontSize: 12,
+      fontSize: 12.5,
       fontFamily: theme.font.bold,
       opacity: 0.8,
     },

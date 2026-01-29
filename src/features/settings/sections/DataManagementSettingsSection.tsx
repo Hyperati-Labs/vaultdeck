@@ -27,6 +27,7 @@ export function DataManagementSettingsSection({
         <SettingsRow
           label="Export Backup"
           iconName="cloud-download-outline"
+          iconColor={theme.colors.accent}
           rightContent={
             <Ionicons
               name="chevron-forward"
@@ -42,6 +43,7 @@ export function DataManagementSettingsSection({
         <SettingsRow
           label="Import Backup"
           iconName="cloud-upload-outline"
+          iconColor={theme.colors.accent}
           rightContent={
             <Ionicons
               name="chevron-forward"

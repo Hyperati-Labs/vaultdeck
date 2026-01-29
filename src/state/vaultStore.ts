@@ -25,6 +25,8 @@ type VaultState = {
   upsertCard: (card: Card) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   setTagColor: (tag: string, color?: string) => Promise<void>;
+  renameTag: (from: string, to: string) => Promise<void>;
+  deleteTag: (tag: string) => Promise<void>;
   resetVault: () => Promise<void>;
   exportVault: (passphrase: string) => Promise<string>;
   importVault: (sourceUri?: string, passphrase?: string) => Promise<void>;
@@ -169,6 +171,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     const { vault } = get();
     if (!vault) return;
     const tagKey = tag.trim().toLowerCase();
+    if (!tagKey) return;
     const nextColors = { ...(vault.tagColors ?? {}) };
     if (!color) {
       delete nextColors[tagKey];
@@ -177,6 +180,62 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }
     const next: VaultData = {
       ...vault,
+      tagColors: nextColors,
+      updatedAt: nowIso(),
+    };
+    await writeVaultData(next);
+    set({ vault: next });
+  },
+  renameTag: async (from, to) => {
+    const { vault } = get();
+    if (!vault) return;
+    const fromKey = from.trim().toLowerCase();
+    const toKey = to.trim().toLowerCase();
+    if (!fromKey || !toKey || fromKey === toKey) return;
+
+    const updatedCards = vault.cards.map((card) => {
+      const nextTags = Array.from(
+        new Set(card.tags.map((t) => (t.toLowerCase() === fromKey ? toKey : t)))
+      );
+      return { ...card, tags: nextTags };
+    });
+
+    const nextColors = { ...(vault.tagColors ?? {}) };
+    if (nextColors[fromKey] && !nextColors[toKey]) {
+      nextColors[toKey] = nextColors[fromKey];
+    }
+    delete nextColors[fromKey];
+
+    updatedCards.sort(compareCards);
+
+    const next: VaultData = {
+      ...vault,
+      cards: updatedCards,
+      tagColors: nextColors,
+      updatedAt: nowIso(),
+    };
+    await writeVaultData(next);
+    set({ vault: next });
+  },
+  deleteTag: async (tag) => {
+    const { vault } = get();
+    if (!vault) return;
+    const tagKey = tag.trim().toLowerCase();
+    if (!tagKey) return;
+
+    const updatedCards = vault.cards.map((card) => {
+      const nextTags = card.tags.filter((t) => t.toLowerCase() !== tagKey);
+      return { ...card, tags: nextTags };
+    });
+
+    const nextColors = { ...(vault.tagColors ?? {}) };
+    delete nextColors[tagKey];
+
+    updatedCards.sort(compareCards);
+
+    const next: VaultData = {
+      ...vault,
+      cards: updatedCards,
       tagColors: nextColors,
       updatedAt: nowIso(),
     };
