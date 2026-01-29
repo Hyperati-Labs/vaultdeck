@@ -3,7 +3,7 @@
     "name": "VaultDeck",
     "slug": "vaultdeck",
     "scheme": "vaultdeck",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/app_icon.png",
@@ -29,7 +29,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.hyperati.labs.vaultdeck",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to unlock your vault."
@@ -37,7 +37,7 @@
     },
     "android": {
       "package": "com.hyperati.labs.vaultdeck",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/app_icon.png",
         "backgroundColor": "#0f141b"

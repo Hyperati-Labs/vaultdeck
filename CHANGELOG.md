@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-01-30
+
+### Changed
+
+- Added accent tint to settings icons.
+
+### Added
+
+- Tag manager with rename, delete and color picker functionality.
+
 ## [1.2.0] - 2026-01-29
 
 ### Added
