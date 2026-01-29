@@ -126,6 +126,28 @@ describe("vaultStore", () => {
     expect(useVaultStore.getState().error).toBe("unknown");
   });
 
+  it("preserves existing tagColors on load and adds missing map when absent", async () => {
+    (vaultBlobExists as jest.Mock).mockResolvedValue(true);
+    (readVaultData as jest.Mock).mockResolvedValueOnce({
+      version: 1,
+      updatedAt: "2024-01-01",
+      tagColors: { foo: "#fff" },
+      cards: [{ ...baseCard }],
+    });
+
+    await useVaultStore.getState().loadVault();
+    expect(useVaultStore.getState().vault?.tagColors?.foo).toBe("#fff");
+
+    (readVaultData as jest.Mock).mockResolvedValueOnce({
+      version: 1,
+      updatedAt: "2024-01-01",
+      cards: [{ ...baseCard }],
+    });
+
+    await useVaultStore.getState().loadVault();
+    expect(useVaultStore.getState().vault?.tagColors).toEqual({});
+  });
+
   it("upserts and deletes cards", async () => {
     useVaultStore.setState({
       vault: { version: 1, updatedAt: "t", cards: [{ ...baseCard }] },
@@ -316,5 +338,48 @@ describe("vaultStore", () => {
     useVaultStore.getState().clearVaultData();
 
     expect(useVaultStore.getState().vault).toBeNull();
+  });
+
+  it("sets and removes tag colors", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        tagColors: { existing: "#111111" },
+        cards: [{ ...baseCard }],
+      },
+    });
+
+    await useVaultStore.getState().setTagColor("NewTag", "#abc123");
+
+    expect(writeVaultData).toHaveBeenCalled();
+    const stateAfterSet = useVaultStore.getState().vault;
+    expect(stateAfterSet?.tagColors?.newtag).toBe("#abc123");
+    expect(stateAfterSet?.tagColors?.existing).toBe("#111111");
+
+    await useVaultStore.getState().setTagColor("NewTag");
+    const stateAfterRemove = useVaultStore.getState().vault;
+    expect(stateAfterRemove?.tagColors?.newtag).toBeUndefined();
+  });
+
+  it("no-ops setTagColor when vault missing", async () => {
+    useVaultStore.setState({ vault: null });
+    await useVaultStore.getState().setTagColor("x", "#fff");
+    expect(writeVaultData).not.toHaveBeenCalled();
+  });
+
+  it("initializes tagColors when missing on setTagColor", async () => {
+    useVaultStore.setState({
+      vault: {
+        version: 1,
+        updatedAt: "t",
+        cards: [{ ...baseCard }],
+      },
+    });
+
+    await useVaultStore.getState().setTagColor("fresh", "#00ff00");
+
+    const state = useVaultStore.getState().vault;
+    expect(state?.tagColors?.fresh).toBe("#00ff00");
   });
 });

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-29
+
+### Added
+
+- User-selectable tag colors with preset swatches and persistent per-tag color map.
+- Quick-add “tap to add” strip showing existing vault tags inside the card form.
+
+### Improved
+
+- Tag filter chips now clearly differentiate active state while keeping layout stable.
+- Tag discard detection fixed to catch unsaved tag edits before navigating away.
+- Inline tag input reliably focuses keyboard on first tap.
+
 ## [1.1.1] - 2026-01-28
 
 ### Fixed
