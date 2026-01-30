@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.2] - 2026-01-30
+
+### Improved
+
+- Revamped Manage Tags screen with modern glassmorphic design and futuristic UI/UX.
+- Added search functionality to filter tags in real-time.
+- Enhanced statistics banner showing total tags, tagged cards, and untagged cards.
+- Fixed Switch component height inconsistency between development and production builds.
+
 ## [1.2.1] - 2026-01-30
 
 ### Changed
