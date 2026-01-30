@@ -1,11 +1,15 @@
 import { useEffect } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import BackButton from "../../src/components/BackButton";
 import Screen from "../../src/components/Screen";
 import { useVaultStore } from "../../src/state/vaultStore";
 import { useTheme } from "../../src/utils/useTheme";
 import { TagManagerSettingsSection } from "../../src/features/settings/sections/TagManagerSettingsSection";
+import {
+  responsiveFontSize,
+  responsiveSpacing,
+} from "../../src/utils/responsive";
 
 export default function TagsManagerScreen() {
   const theme = useTheme();
@@ -31,14 +35,14 @@ export default function TagsManagerScreen() {
         <BackButton />
         <Text
           style={{
-            fontSize: 18,
+            fontSize: responsiveFontSize(18),
             fontFamily: theme.font.bold,
             color: theme.colors.ink,
           }}
         >
           Manage Tags
         </Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: responsiveSpacing(40) }} />
       </View>
 
       <TagManagerSettingsSection />

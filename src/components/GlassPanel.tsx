@@ -3,6 +3,7 @@ import { StyleSheet, View, ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
 
 import { useTheme } from "../utils/useTheme";
+import { responsiveSpacing } from "../utils/responsive";
 
 type GlassPanelProps = {
   children: ReactNode;
@@ -44,6 +45,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   content: {
-    padding: 16,
+    padding: responsiveSpacing(16),
   },
 });

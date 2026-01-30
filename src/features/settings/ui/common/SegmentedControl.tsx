@@ -1,6 +1,7 @@
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 
 import { useTheme } from "../../../../utils/useTheme";
+import { responsiveFontSize } from "../../../../utils/responsive";
 
 export type SegmentOption<T extends string | number> = {
   label: string;
@@ -65,7 +66,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.ink,
     },
     segmentText: {
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       zIndex: 1,

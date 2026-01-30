@@ -1,7 +1,6 @@
 import { useReducer } from "react";
 import { Alert } from "react-native";
 
-import { logger } from "../../utils/logger";
 import {
   VaultCorruptError,
   VaultPassphraseRequiredError,
@@ -154,7 +153,6 @@ export function useBackupFlow({
         Alert.alert("Import failed", "Please select a VaultDeck backup file.");
         return;
       }
-      logger.error("Import picker failed", err);
       Alert.alert("Import failed", "Invalid backup file.");
     } finally {
       setAutoLockBypass(false);
@@ -185,13 +183,7 @@ export function useBackupFlow({
       dispatch({ type: "SET_BUSY", value: true });
 
       if (action === "export") {
-        if (__DEV__) {
-          logger.info("Export start");
-        }
         const path = await exportVault(trimmedPassphrase);
-        if (__DEV__) {
-          logger.info("Export path", { path });
-        }
         const saved = await saveBackupFile(path);
         if (saved) {
           dispatch({ type: "SET_SUCCESS", value: "Backup saved." });
@@ -210,7 +202,6 @@ export function useBackupFlow({
         dispatch({ type: "SET_IMPORT_WARNING", value: false });
       }
     } catch (err) {
-      logger.error("Backup action failed", err);
       if (err instanceof VaultPassphraseRequiredError) {
         Alert.alert(
           "Backup password",

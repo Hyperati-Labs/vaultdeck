@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "../../../../utils/useTheme";
 import { getSettingsStyles } from "../../settingsStyles";
+import { responsiveSpacing } from "../../../../utils/responsive";
 
 export type PickerOption<T> = { label: string; value: T };
 
@@ -32,7 +33,7 @@ export function OptionPickerModal<T>({
         <View style={styles.modalCard}>
           <Text style={styles.modalTitle}>{title}</Text>
           <ScrollView
-            style={{ maxHeight: 320 }}
+            style={{ maxHeight: responsiveSpacing(320) }}
             contentContainerStyle={{
               gap: theme.spacing.xs,
               paddingBottom: theme.spacing.md,

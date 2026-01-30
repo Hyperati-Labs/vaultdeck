@@ -15,6 +15,10 @@ import Screen from "../../src/components/Screen";
 import BackButton from "../../src/components/BackButton";
 import { useAuthStore } from "../../src/state/authStore";
 import { useTheme } from "../../src/utils/useTheme";
+import {
+  responsiveFontSize,
+  responsiveSpacing,
+} from "../../src/utils/responsive";
 
 const PIN_LENGTH = 4;
 
@@ -356,7 +360,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: "flex-end",
     },
     title: {
-      fontSize: 26,
+      fontSize: responsiveFontSize(26),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
@@ -365,7 +369,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.accent,
       textTransform: "uppercase",
       letterSpacing: 1,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
     },
     spacer: {
       flex: 1,
@@ -376,7 +380,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.md,
     },
     pinTitle: {
-      fontSize: 18,
+      fontSize: responsiveFontSize(18),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
       marginBottom: theme.spacing.sm,
@@ -385,13 +389,13 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 24,
-      minHeight: 24,
+      gap: responsiveSpacing(24),
+      minHeight: responsiveSpacing(24),
     },
     pinDot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
+      width: responsiveSpacing(14),
+      height: responsiveSpacing(14),
+      borderRadius: responsiveSpacing(7),
       borderWidth: 1.5,
       borderColor: theme.colors.ink,
     },
@@ -401,7 +405,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     error: {
       color: theme.colors.danger,
       fontFamily: theme.font.regular,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       marginTop: theme.spacing.sm,
     },
     keypad: {
@@ -411,12 +415,12 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     keypadRow: {
       flexDirection: "row",
-      gap: 20,
+      gap: responsiveSpacing(20),
     },
     keypadButton: {
-      width: 75,
-      height: 75,
-      borderRadius: 38,
+      width: responsiveSpacing(75),
+      height: responsiveSpacing(75),
+      borderRadius: responsiveSpacing(38),
       borderWidth: 1,
       borderColor: theme.colors.outline,
       alignItems: "center",
@@ -434,10 +438,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     keypadText: {
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
-      fontSize: 28,
+      fontSize: responsiveFontSize(28),
     },
     keypadButtonPlaceholder: {
-      width: 75,
+      width: responsiveSpacing(75),
     },
     disabled: {
       opacity: 0.3,
@@ -450,7 +454,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     modalCard: {
       width: "100%",
-      maxWidth: 340,
+      maxWidth: responsiveSpacing(340),
       backgroundColor: theme.colors.surface,
       borderRadius: theme.radius.lg,
       borderWidth: 1,
@@ -469,19 +473,19 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: theme.spacing.md,
     },
     modalTitle: {
-      fontSize: 22,
+      fontSize: responsiveFontSize(22),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
       textAlign: "center",
     },
     modalBody: {
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
       marginTop: theme.spacing.sm,
       marginBottom: theme.spacing.xl,
-      lineHeight: 22,
+      lineHeight: responsiveFontSize(22),
     },
     modalButton: {
       backgroundColor: theme.colors.accent,
@@ -494,6 +498,6 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     modalButtonText: {
       color: theme.colors.surface,
       fontFamily: theme.font.bold,
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
     },
   });

@@ -25,6 +25,10 @@ import { requireSensitiveAuth } from "../../src/utils/sensitiveAuth";
 import { useHaptics } from "../../src/utils/useHaptics";
 import { useTheme } from "../../src/utils/useTheme";
 import { getTagColor } from "../../src/utils/tagColors";
+import {
+  responsiveFontSize,
+  responsiveSpacing,
+} from "../../src/utils/responsive";
 
 import VirtualCard from "../../src/components/VirtualCard";
 
@@ -331,9 +335,9 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.sm,
     },
     iconAction: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: responsiveSpacing(40),
+      height: responsiveSpacing(40),
+      borderRadius: responsiveSpacing(20),
       borderWidth: 1,
       borderColor: theme.colors.outline,
       backgroundColor: theme.colors.surfaceTint,
@@ -355,17 +359,17 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      minWidth: 110,
-      gap: 6,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 20,
+      minWidth: responsiveSpacing(110),
+      gap: responsiveSpacing(6),
+      paddingVertical: responsiveSpacing(6),
+      paddingHorizontal: responsiveSpacing(12),
+      borderRadius: responsiveSpacing(20),
       backgroundColor: theme.colors.surfaceTint,
       borderWidth: 1,
       borderColor: theme.colors.outline,
     },
     subtleButtonText: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
       opacity: 0.8,
@@ -379,7 +383,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginTop: theme.spacing.xl,
     },
     sectionHeader: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       fontFamily: theme.font.bold,
       color: theme.colors.muted,
       textTransform: "uppercase",
@@ -387,10 +391,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: theme.spacing.sm,
     },
     notesText: {
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
-      lineHeight: 22,
+      lineHeight: responsiveFontSize(22),
       backgroundColor: theme.colors.surfaceTint,
       padding: theme.spacing.md,
       borderRadius: 12,
@@ -406,13 +410,13 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.xs,
     },
     tagPill: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 16,
+      paddingVertical: responsiveSpacing(5),
+      paddingHorizontal: responsiveSpacing(10),
+      borderRadius: responsiveSpacing(16),
       borderWidth: 1,
     },
     tagText: {
-      fontSize: 12.5,
+      fontSize: responsiveFontSize(12.5),
       fontFamily: theme.font.bold,
       opacity: 0.8,
     },
@@ -427,7 +431,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: theme.spacing.md,
     },
     copyNotice: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
@@ -453,17 +457,17 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       elevation: 10,
     },
     modalTitle: {
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
       marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     modalBody: {
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
-      lineHeight: 22,
+      lineHeight: responsiveFontSize(22),
       marginBottom: theme.spacing.xl,
       textAlign: "center",
     },

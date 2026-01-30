@@ -15,7 +15,6 @@ import {
   type EncryptedPayload,
 } from "../crypto/vaultCrypto";
 import type { VaultData } from "../types/vault";
-import { logger } from "../utils/logger";
 
 const VAULT_KEY_ID = "vault_key_v1";
 const VAULT_BLOB_PATH = `${FileSystem.documentDirectory}vault.blob`;
@@ -274,12 +273,6 @@ export async function importVaultBlob(
   }
 
   const content = await readBackupContent(sourceUri);
-  if (__DEV__ && Platform.OS !== "web") {
-    logger.info("Import vault blob", {
-      uri: sourceUri ?? VAULT_BACKUP_PATH,
-      length: content.length,
-    });
-  }
 
   const envelope = parseBackupEnvelope(content);
   const backup = await decryptBackupEnvelope(passphrase, envelope);
@@ -360,16 +353,10 @@ export async function readVaultData(
     const raw = await FileSystem.readAsStringAsync(VAULT_BLOB_PATH, {
       encoding: FileSystem.EncodingType.UTF8,
     });
-    if (__DEV__) {
-      logger.info("Read vault blob", { length: raw.length });
-    }
     const payload = parseEncryptedPayload(raw);
     const plaintext = decryptPayload(payload, decodeKeyBase64(key));
     return JSON.parse(plaintext) as VaultData;
   } catch (error) {
-    if (__DEV__) {
-      logger.error("Read vault blob failed", error);
-    }
     throw new VaultCorruptError();
   }
 }

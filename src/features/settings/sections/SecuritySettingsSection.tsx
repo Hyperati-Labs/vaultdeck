@@ -9,6 +9,7 @@ import { useTheme } from "../../../utils/useTheme";
 import { useAuthStore } from "../../../state/authStore";
 import { useSettingsStore } from "../../../state/settingsStore";
 import { OptionPickerModal } from "../ui/common/OptionPickerModal";
+import { responsiveSpacing } from "../../../utils/responsive";
 
 export function SecuritySettingsSection(_props: any) {
   const theme = useTheme();
@@ -80,7 +81,12 @@ export function SecuritySettingsSection(_props: any) {
           iconName="finger-print-outline"
           iconColor={theme.colors.accent}
           rightContent={
-            <View style={{ height: 24, justifyContent: "center" }}>
+            <View
+              style={{
+                height: responsiveSpacing(24),
+                justifyContent: "center",
+              }}
+            >
               <Switch
                 value={biometricEnabled}
                 onValueChange={setBiometricEnabled}

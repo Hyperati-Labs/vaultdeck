@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import Screen from "../src/components/Screen";
 import { useTheme } from "../src/utils/useTheme";
+import { responsiveFontSize } from "../src/utils/responsive";
 
 export default function NotFoundScreen() {
   const theme = useTheme();
@@ -30,13 +31,13 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: "center",
     },
     text: {
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
     },
     link: {
       marginTop: theme.spacing.sm,
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
       color: theme.colors.accent,
       fontFamily: theme.font.bold,
     },

@@ -2,6 +2,7 @@ import { Modal, TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { BlurView } from "expo-blur";
 
 import { useTheme } from "../../../../utils/useTheme";
+import { responsiveFontSize } from "../../../../utils/responsive";
 
 type ConfirmResetModalProps = {
   visible: boolean;
@@ -61,7 +62,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     modalTitle: {
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
@@ -69,7 +70,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       lineHeight: 22,
       marginBottom: theme.spacing.xl,
     },

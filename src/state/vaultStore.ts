@@ -1,7 +1,6 @@
 import { create } from "zustand";
 
 import type { Card, VaultData } from "../types/vault";
-import { logger } from "../utils/logger";
 import {
   VaultCorruptError,
   VaultMissingKeyError,
@@ -65,7 +64,6 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     try {
       const exists = await vaultBlobExists();
       if (!exists) {
-        logger.info("No vault blob found, creating new vault");
         await getOrCreateVaultKey();
         const vault = emptyVault();
         await writeVaultData(vault);
@@ -74,7 +72,6 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       }
       const vault = await readVaultData();
       if (!vault) {
-        logger.warn("Vault blob empty, recreating vault");
         const next = emptyVault();
         await writeVaultData(next);
         set({ vault: next, loading: false, error: null });
@@ -91,9 +88,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
       set({ vault, loading: false, error: null });
     } catch (error) {
-      logger.error("Vault load failed", error);
       if (error instanceof VaultMissingKeyError) {
-        logger.warn("Vault key missing, auto-resetting vault");
         await get().resetVault();
         return;
       }
@@ -143,7 +138,6 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   resetVault: async () => {
     set({ loading: true, error: null });
     try {
-      logger.warn("Resetting vault");
       await deleteVaultBlob();
       await deleteVaultKey();
       await getOrCreateVaultKey();
@@ -151,7 +145,6 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       await writeVaultData(fresh);
       set({ vault: fresh, error: null, loading: false });
     } catch (err) {
-      logger.error("Reset vault failed", err);
       set({ vault: null, error: null, loading: false });
     }
   },

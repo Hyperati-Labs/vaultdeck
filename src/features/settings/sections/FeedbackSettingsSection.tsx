@@ -4,6 +4,7 @@ import { SettingsRow } from "../ui/common/SettingsRow";
 import { getSettingsStyles } from "../settingsStyles";
 import { useTheme } from "../../../utils/useTheme";
 import { useSettingsStore } from "../../../state/settingsStore";
+import { responsiveSpacing } from "../../../utils/responsive";
 
 export function FeedbackSettingsSection(_props: any) {
   const theme = useTheme();
@@ -22,7 +23,12 @@ export function FeedbackSettingsSection(_props: any) {
           iconName="pulse-outline"
           iconColor={theme.colors.accent}
           rightContent={
-            <View style={{ height: 24, justifyContent: "center" }}>
+            <View
+              style={{
+                height: responsiveSpacing(24),
+                justifyContent: "center",
+              }}
+            >
               <Switch
                 value={hapticsEnabled}
                 onValueChange={setHapticsEnabled}

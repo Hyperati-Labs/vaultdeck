@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import Screen from "../src/components/Screen";
 import { useTheme } from "../src/utils/useTheme";
+import { responsiveFontSize } from "../src/utils/responsive";
 
 type ErrorScreenProps = {
   error: Error;
@@ -32,7 +33,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     title: {
       fontFamily: theme.font.bold,
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       color: theme.colors.ink,
     },
     message: {

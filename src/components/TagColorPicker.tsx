@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { TAG_COLOR_PRESETS } from "../utils/tagColors";
 import { useTheme } from "../utils/useTheme";
+import { responsiveFontSize, responsiveSpacing } from "../utils/responsive";
 
 type TagColorPickerProps = {
   visible: boolean;
@@ -88,7 +89,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     title: {
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
     },
     swatchRow: {
       flexDirection: "row",
@@ -96,8 +97,8 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.sm,
     },
     swatch: {
-      width: 38,
-      height: 38,
+      width: responsiveSpacing(38),
+      height: responsiveSpacing(38),
       borderRadius: 10,
       borderWidth: 2,
       borderColor: "transparent",
@@ -112,8 +113,8 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: "center",
     },
     actionGhost: {
-      paddingVertical: 10,
-      paddingHorizontal: 14,
+      paddingVertical: responsiveSpacing(10),
+      paddingHorizontal: responsiveSpacing(14),
       borderRadius: theme.radius.md,
       backgroundColor: theme.colors.surfaceTint,
       borderWidth: 1,
@@ -124,8 +125,8 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.ink,
     },
     actionPrimary: {
-      paddingVertical: 10,
-      paddingHorizontal: 16,
+      paddingVertical: responsiveSpacing(10),
+      paddingHorizontal: responsiveSpacing(16),
       borderRadius: theme.radius.md,
       backgroundColor: theme.colors.accent,
     },

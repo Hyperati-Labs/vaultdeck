@@ -1,6 +1,5 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import {
-  Animated,
   Modal,
   Pressable,
   ScrollView,
@@ -14,10 +13,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 
-import { getSettingsStyles } from "../settingsStyles";
 import { useTheme } from "../../../utils/useTheme";
 import { useVaultStore } from "../../../state/vaultStore";
 import { getTagColor } from "../../../utils/tagColors";
+import {
+  responsiveFontSize,
+  responsiveSpacing,
+} from "../../../utils/responsive";
 import { TagColorPicker } from "../../../components/TagColorPicker";
 import { useHaptics } from "../../../utils/useHaptics";
 
@@ -26,7 +28,6 @@ type DeleteState = string | null;
 
 export function TagManagerSettingsSection() {
   const theme = useTheme();
-  const styles = getSettingsStyles(theme);
   const localStyles = useMemo(() => getLocalStyles(theme), [theme]);
   const { vault, setTagColor, renameTag, deleteTag } = useVaultStore();
   const { impact } = useHaptics();
@@ -57,6 +58,7 @@ export function TagManagerSettingsSection() {
   const totalCards = vault?.cards.length ?? 0;
   const untaggedCards =
     vault?.cards.filter((card) => card.tags.length === 0).length ?? 0;
+  const taggedCards = totalCards - untaggedCards;
 
   const handleRename = async () => {
     if (!renameState) return;
@@ -71,25 +73,6 @@ export function TagManagerSettingsSection() {
     await deleteTag(deleteState);
     setDeleteState(null);
   };
-
-  if (!tagEntries.length) {
-    return (
-      <View style={localStyles.emptyState}>
-        <View style={localStyles.emptyIconContainer}>
-          <Ionicons
-            name="pricetag-outline"
-            size={48}
-            color={theme.colors.muted}
-          />
-        </View>
-        <Text style={localStyles.emptyTitle}>No tags yet</Text>
-        <Text style={localStyles.emptyMessage}>
-          Tags help you organize cards.{"\n"}
-          Add tags when creating or editing cards.
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <>
@@ -106,7 +89,7 @@ export function TagManagerSettingsSection() {
           </View>
           <View style={localStyles.statCard}>
             <Ionicons name="card" size={20} color={theme.colors.accent} />
-            <Text style={localStyles.statValue}>{totalCards}</Text>
+            <Text style={localStyles.statValue}>{taggedCards}</Text>
             <Text style={localStyles.statLabel} numberOfLines={1}>
               Tagged
             </Text>
@@ -125,33 +108,35 @@ export function TagManagerSettingsSection() {
         </View>
 
         {/* Search Bar */}
-        <View style={localStyles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={theme.colors.muted}
-            style={localStyles.searchIcon}
-          />
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search tags..."
-            placeholderTextColor={theme.colors.muted}
-            style={localStyles.searchInput}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery("")}
-              style={localStyles.searchClear}
-            >
-              <Ionicons
-                name="close-circle"
-                size={18}
-                color={theme.colors.muted}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        {tagEntries.length > 0 && (
+          <View style={localStyles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={theme.colors.muted}
+              style={localStyles.searchIcon}
+            />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search tags..."
+              placeholderTextColor={theme.colors.muted}
+              style={localStyles.searchInput}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={localStyles.searchClear}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={18}
+                  color={theme.colors.muted}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Scrollable Tag List */}
@@ -162,7 +147,22 @@ export function TagManagerSettingsSection() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={localStyles.tagList}>
-          {filteredEntries.length === 0 ? (
+          {tagEntries.length === 0 ? (
+            <View style={localStyles.emptyState}>
+              <View style={localStyles.emptyIconContainer}>
+                <Ionicons
+                  name="pricetag-outline"
+                  size={48}
+                  color={theme.colors.muted}
+                />
+              </View>
+              <Text style={localStyles.emptyTitle}>No tags yet</Text>
+              <Text style={localStyles.emptyMessage}>
+                Tags help you organize cards.{"\n"}
+                Add tags when creating or editing cards.
+              </Text>
+            </View>
+          ) : filteredEntries.length === 0 ? (
             <View style={localStyles.noResults}>
               <Ionicons
                 name="search-outline"
@@ -450,12 +450,12 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       minHeight: 70,
     },
     statValue: {
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
     statLabel: {
-      fontSize: 10,
+      fontSize: responsiveFontSize(10),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textTransform: "uppercase",
@@ -480,7 +480,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     searchInput: {
       flex: 1,
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
       padding: 0,
@@ -515,8 +515,8 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.md,
     },
     colorIndicator: {
-      width: 40,
-      height: 40,
+      width: responsiveSpacing(40),
+      height: responsiveSpacing(40),
       borderRadius: 12,
       borderWidth: 1.5,
       alignItems: "center",
@@ -531,7 +531,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: "center",
     },
     tagName: {
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
@@ -546,11 +546,11 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: 8,
     },
     tagBadgeText: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       fontFamily: theme.font.bold,
     },
     tagSubtext: {
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
     },
@@ -559,8 +559,8 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.xs,
     },
     actionButton: {
-      width: 36,
-      height: 36,
+      width: responsiveSpacing(36),
+      height: responsiveSpacing(36),
       borderRadius: 10,
       backgroundColor: theme.colors.surfaceTint,
       alignItems: "center",
@@ -579,8 +579,8 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingHorizontal: theme.spacing.lg,
     },
     emptyIconContainer: {
-      width: 80,
-      height: 80,
+      width: responsiveSpacing(80),
+      height: responsiveSpacing(80),
       borderRadius: 40,
       backgroundColor: theme.colors.surfaceTint,
       alignItems: "center",
@@ -588,13 +588,13 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: theme.spacing.md,
     },
     emptyTitle: {
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
       marginBottom: theme.spacing.xs,
     },
     emptyMessage: {
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
@@ -606,7 +606,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.sm,
     },
     noResultsText: {
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
     },
@@ -624,7 +624,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: theme.radius.xl,
       padding: theme.spacing.lg,
       width: "100%",
-      maxWidth: 400,
+      maxWidth: responsiveSpacing(400),
       borderWidth: 1,
       borderColor: theme.colors.outline,
       shadowColor: "#000",
@@ -649,12 +649,12 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: "center",
     },
     modernModalTitle: {
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
     modernModalBody: {
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
@@ -673,7 +673,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: theme.spacing.lg,
     },
     modernInput: {
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
       paddingHorizontal: theme.spacing.md,
@@ -694,7 +694,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       borderColor: theme.colors.outline,
     },
     modernActionGhostText: {
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
@@ -708,7 +708,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: "center",
     },
     modernActionPrimaryText: {
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.bold,
       color: theme.colors.surface,
     },
@@ -722,7 +722,7 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: "center",
     },
     modernActionDangerText: {
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       fontFamily: theme.font.bold,
       color: theme.colors.surface,
     },

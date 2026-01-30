@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useTheme } from "../utils/useTheme";
+import { responsiveSpacing } from "../utils/responsive";
 
 type ScreenProps = {
   children: ReactNode;
@@ -64,18 +65,18 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     orb: {
       position: "absolute",
-      width: 240,
-      height: 240,
-      borderRadius: 999,
+      width: responsiveSpacing(240),
+      height: responsiveSpacing(240),
+      borderRadius: responsiveSpacing(999),
       opacity: theme.isDark ? 0.3 : 0.6,
       transform: [{ scaleX: 1.2 }],
     },
     orbTop: {
-      top: -120,
-      right: -80,
+      top: -responsiveSpacing(120),
+      right: -responsiveSpacing(80),
     },
     orbBottom: {
-      bottom: -140,
-      left: -60,
+      bottom: -responsiveSpacing(140),
+      left: -responsiveSpacing(60),
     },
   });

@@ -27,6 +27,7 @@ import { generateId } from "../src/utils/id";
 import { Card } from "../src/types/vault";
 import { useHaptics } from "../src/utils/useHaptics";
 import { getTagColor } from "../src/utils/tagColors";
+import { responsiveFontSize, responsiveSpacing } from "../src/utils/responsive";
 
 export default function Index() {
   const theme = useTheme();
@@ -649,7 +650,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     cardTagRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: responsiveSpacing(6),
     },
     header: {
       flexDirection: "row",
@@ -688,18 +689,18 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     kicker: {
       fontFamily: theme.font.bold,
       color: theme.colors.accent,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       textTransform: "uppercase",
       letterSpacing: 1,
     },
     subtitle: {
       color: theme.colors.muted,
       marginTop: theme.spacing.xs,
-      maxWidth: 240,
+      maxWidth: responsiveSpacing(240),
       fontFamily: theme.font.regular,
     },
     title: {
-      fontSize: 30,
+      fontSize: responsiveFontSize(30),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
@@ -715,7 +716,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     cardTitle: {
       fontFamily: theme.font.bold,
-      fontSize: 18,
+      fontSize: responsiveFontSize(18),
       color: theme.colors.ink,
       flex: 1,
       minWidth: 0,
@@ -762,24 +763,24 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.outline,
       borderRadius: 999,
-      paddingVertical: 2,
-      paddingHorizontal: 8,
+      paddingVertical: responsiveSpacing(2),
+      paddingHorizontal: responsiveSpacing(8),
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: responsiveSpacing(6),
       backgroundColor: theme.colors.surfaceTint,
     },
     cardTypePillText: {
       fontFamily: theme.font.bold,
       color: theme.colors.muted,
-      fontSize: 10,
+      fontSize: responsiveFontSize(10),
       textTransform: "uppercase",
       letterSpacing: 0.6,
     },
     iconButton: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      width: responsiveSpacing(38),
+      height: responsiveSpacing(38),
+      borderRadius: responsiveSpacing(19),
       backgroundColor: theme.colors.glass,
       borderWidth: 1,
       borderColor: theme.colors.glassBorder,
@@ -791,9 +792,9 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       borderColor: theme.colors.accent,
     },
     iconButtonAdd: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      width: responsiveSpacing(38),
+      height: responsiveSpacing(38),
+      borderRadius: responsiveSpacing(19),
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.isDark
@@ -813,12 +814,12 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: "row",
       gap: theme.spacing.sm,
       alignItems: "center",
-      paddingBottom: 4, // Space for shadow/elevation if needed
+      paddingBottom: responsiveSpacing(4), // Space for shadow/elevation if needed
     },
     filterChip: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
-      borderRadius: 16,
+      paddingVertical: responsiveSpacing(5),
+      paddingHorizontal: responsiveSpacing(10),
+      borderRadius: responsiveSpacing(16),
       borderWidth: 1,
       borderColor: theme.colors.outline,
       backgroundColor: theme.colors.surfaceTint,
@@ -830,7 +831,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     filterChipText: {
       fontFamily: theme.font.bold,
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       color: theme.colors.ink,
       opacity: 0.8,
       includeFontPadding: false,
@@ -838,17 +839,17 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     clearChip: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: 20,
+      gap: responsiveSpacing(4),
+      paddingVertical: responsiveSpacing(6),
+      paddingHorizontal: responsiveSpacing(12),
+      borderRadius: responsiveSpacing(20),
       borderWidth: 1,
       borderColor: theme.colors.outline,
       backgroundColor: theme.colors.surfaceTint,
     },
     clearChipText: {
       fontFamily: theme.font.bold,
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       color: theme.colors.ink,
       includeFontPadding: false,
     },
@@ -869,7 +870,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     menuOptions: {
       position: "absolute",
-      width: 250,
+      width: responsiveSpacing(250),
       backgroundColor: theme.colors.surface,
       borderRadius: 14,
       overflow: "hidden",
@@ -892,7 +893,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: "center",
     },
     menuActionText: {
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
     },
@@ -927,17 +928,17 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       shadowOpacity: 0.15,
       shadowRadius: 12,
       elevation: 6,
-      maxWidth: 280,
+      maxWidth: responsiveSpacing(280),
     },
     snackbarText: {
       color: theme.colors.ink,
       fontFamily: theme.font.regular,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       textAlign: "center",
     },
     snackbarAction: {
-      paddingVertical: 6,
-      paddingHorizontal: 10,
+      paddingVertical: responsiveSpacing(6),
+      paddingHorizontal: responsiveSpacing(10),
       borderRadius: theme.radius.sm,
       backgroundColor: theme.colors.surfaceTint,
       borderWidth: 1,
@@ -946,6 +947,6 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     snackbarActionText: {
       color: theme.colors.accent,
       fontFamily: theme.font.bold,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
     },
   });

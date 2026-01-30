@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
 import { useTheme } from "../../utils/useTheme";
+import { responsiveFontSize, responsiveSpacing } from "../../utils/responsive";
 
 export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
@@ -12,7 +13,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingVertical: theme.spacing.sm,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: responsiveFontSize(18),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
@@ -28,7 +29,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: theme.spacing.xl,
     },
     sectionTitle: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       fontFamily: theme.font.bold,
       color: theme.colors.muted,
       textTransform: "uppercase",
@@ -67,12 +68,12 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     rowLabel: {
       flex: 1,
-      fontSize: 16,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
     },
     rowSubLabel: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(10),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       marginTop: 2,
@@ -99,7 +100,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.ink,
     },
     segmentText: {
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       zIndex: 1,
@@ -109,7 +110,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.surface,
     },
     versionText: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       color: theme.colors.muted,
       fontFamily: theme.font.regular,
     },
@@ -132,7 +133,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
     modalTitle: {
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
@@ -140,7 +141,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       lineHeight: 22,
       marginBottom: theme.spacing.xl,
     },
@@ -162,7 +163,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
     input: {
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
     },
     inputDisabled: {
       color: theme.colors.muted,
@@ -170,7 +171,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
     helperText: {
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       textAlign: "center",
       marginBottom: theme.spacing.md,
     },
@@ -235,7 +236,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
     warningText: {
       flex: 1,
       fontFamily: theme.font.regular,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       color: theme.colors.ink,
       lineHeight: 16,
     },
@@ -245,8 +246,8 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.xs,
     },
     checkbox: {
-      width: 18,
-      height: 18,
+      width: responsiveSpacing(18),
+      height: responsiveSpacing(18),
       borderRadius: 3,
       borderWidth: 2,
       borderColor: theme.colors.accent,
@@ -257,7 +258,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
     checkboxLabel: {
       flex: 1,
       fontFamily: theme.font.regular,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       color: theme.colors.ink,
     },
   });

@@ -1,12 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import {
-  Animated,
-  PanResponder,
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-} from "react-native";
+import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -15,6 +8,11 @@ import { useTheme } from "../utils/useTheme";
 import { useHaptics } from "../utils/useHaptics";
 import CardBrandIcon from "./CardBrandIcon";
 import { detectCardType } from "../utils/cardType";
+import {
+  responsiveFontSize,
+  responsiveSpacing,
+  getCardDimensions,
+} from "../utils/responsive";
 import type { Card } from "../types/vault";
 
 type VirtualCardProps = {
@@ -23,9 +21,7 @@ type VirtualCardProps = {
   displayNumber: string;
 };
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH - 48;
-const CARD_HEIGHT = CARD_WIDTH / 1.586; // Standard credit card aspect ratio
+const { width: CARD_WIDTH, height: CARD_HEIGHT } = getCardDimensions();
 
 const clampRotation = (value: number, limit: number) =>
   Math.max(-limit, Math.min(limit, value));
@@ -46,7 +42,28 @@ export default function VirtualCard({
   const rotateX = useRef(new Animated.Value(0)).current;
   const rotateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
+  const breathe = useRef(new Animated.Value(0)).current;
   const { impact } = useHaptics();
+
+  // Idle breathing animation
+  React.useEffect(() => {
+    const breathing = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(breathe, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    breathing.start();
+    return () => breathing.stop();
+  }, [breathe]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -128,11 +145,17 @@ export default function VirtualCard({
     outputRange: ["-30deg", "30deg"],
   });
 
+  const breatheInterpolate = breathe.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 8],
+  });
+
   const baseTransform = [
     { perspective: 1200 },
     { rotateX: rotateXInterpolate },
     { rotateY: rotateYInterpolate },
     { scale },
+    { translateY: breatheInterpolate },
   ];
 
   return (
@@ -209,12 +232,12 @@ const getStyles = (theme: any) =>
       left: 0,
       width: "100%",
       height: "100%",
-      borderRadius: 18,
+      borderRadius: responsiveSpacing(18),
       backfaceVisibility: "hidden",
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 12 },
+      shadowOffset: { width: 0, height: responsiveSpacing(12) },
       shadowOpacity: 0.4,
-      shadowRadius: 16,
+      shadowRadius: responsiveSpacing(16),
       elevation: 20,
     },
     cardFront: {
@@ -222,43 +245,43 @@ const getStyles = (theme: any) =>
     },
     cardGradient: {
       flex: 1,
-      borderRadius: 18,
-      padding: 24,
+      borderRadius: responsiveSpacing(18),
+      padding: responsiveSpacing(24),
       overflow: "hidden",
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.1)",
     },
     highlight: {
       position: "absolute",
-      top: -100,
-      left: -100,
-      width: 300,
-      height: 300,
-      borderRadius: 150,
+      top: -responsiveSpacing(100),
+      left: -responsiveSpacing(100),
+      width: responsiveSpacing(300),
+      height: responsiveSpacing(300),
+      borderRadius: responsiveSpacing(150),
       backgroundColor: "rgba(255,255,255,0.05)",
     },
     cardHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 10,
+      marginBottom: responsiveSpacing(10),
     },
     bankName: {
       fontFamily: theme.font.bold,
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
       color: "#fff",
       letterSpacing: 0.5,
     },
     chipContainer: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      marginBottom: 20,
+      gap: responsiveSpacing(12),
+      marginBottom: responsiveSpacing(20),
     },
     chip: {
-      width: 44,
-      height: 32,
-      borderRadius: 6,
+      width: responsiveSpacing(44),
+      height: responsiveSpacing(32),
+      borderRadius: responsiveSpacing(6),
       backgroundColor: "#d4af37",
       opacity: 0.8,
     },
@@ -268,12 +291,13 @@ const getStyles = (theme: any) =>
     numberContainer: {
       flex: 1,
       justifyContent: "center",
+      overflow: "hidden",
     },
     cardNumber: {
       fontFamily: theme.font.bold,
-      fontSize: 22,
+      fontSize: responsiveFontSize(22),
       color: "#fff",
-      letterSpacing: 2,
+      letterSpacing: responsiveFontSize(2),
       textShadowColor: "rgba(0,0,0,0.5)",
       textShadowOffset: { width: 1, height: 1 },
       textShadowRadius: 2,
@@ -284,16 +308,16 @@ const getStyles = (theme: any) =>
       alignItems: "flex-end",
     },
     footerItem: {
-      gap: 4,
+      gap: responsiveSpacing(4),
     },
     label: {
-      fontSize: 9,
+      fontSize: responsiveFontSize(9),
       fontFamily: theme.font.regular,
       color: "rgba(255,255,255,0.5)",
-      letterSpacing: 1,
+      letterSpacing: responsiveFontSize(1),
     },
     value: {
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.bold,
       color: "#fff",
       letterSpacing: 0.5,

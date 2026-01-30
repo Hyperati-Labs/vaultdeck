@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "../utils/useTheme";
+import { responsiveFontSize } from "../utils/responsive";
 
 type BackButtonProps = {
   onPress?: () => void;
@@ -42,6 +43,6 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     text: {
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
     },
   });

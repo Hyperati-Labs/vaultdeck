@@ -3,8 +3,6 @@ import * as LocalAuthentication from "expo-local-authentication";
 import * as Crypto from "expo-crypto";
 import { encodeBase64 } from "tweetnacl-util";
 
-import { logger } from "../utils/logger";
-
 import { getItem, setItem } from "../storage/secureStore";
 
 const PIN_SALT_KEY = "vault_pin_salt_v1";
@@ -85,8 +83,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         ? autoLockSeconds
         : DEFAULT_AUTO_LOCK_SECONDS,
     });
-    // Debug timing to confirm SecureStore responses in dev.
-    logger.info("Auth state loaded", { ms: Date.now() - start });
   },
   lock: () => set({ locked: true }),
   unlock: () => set({ locked: false }),

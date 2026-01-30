@@ -9,6 +9,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "../../../../utils/useTheme";
+import {
+  responsiveFontSize,
+  responsiveSpacing,
+} from "../../../../utils/responsive";
 
 type SettingsRowProps = {
   label: string;
@@ -116,7 +120,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     rowIcon: {
       marginRight: theme.spacing.md,
-      width: 24,
+      width: responsiveSpacing(24),
       alignItems: "center",
     },
     rowContent: {
@@ -129,18 +133,18 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.xs,
     },
     rowLabel: {
-      fontSize: 16,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
     },
     rowSubLabel: {
-      fontSize: 12,
+      fontSize: responsiveFontSize(10),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       marginTop: 2,
     },
     rowSubLabelInline: {
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
     },

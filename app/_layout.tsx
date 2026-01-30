@@ -14,7 +14,6 @@ import { useSettingsStore } from "../src/state/settingsStore";
 import { useVaultStore } from "../src/state/vaultStore";
 import { useThemeStore } from "../src/state/themeStore";
 import { useTheme } from "../src/utils/useTheme";
-import { logger } from "../src/utils/logger";
 import UnlockScreen from "./unlock";
 
 export default function RootLayout() {
@@ -38,12 +37,7 @@ export default function RootLayout() {
   const loadThemePreference = useThemeStore((state) => state.loadPreference);
   const loadSettings = useSettingsStore((state) => state.loadSettings);
 
-  if (__DEV__) {
-    logger.info("RootLayout render");
-  }
-
   useEffect(() => {
-    logger.info("Loading auth state");
     loadAuthState();
   }, [loadAuthState]);
 
@@ -90,7 +84,6 @@ export default function RootLayout() {
     if (!initialized) {
       return;
     }
-    logger.info("Auth state ready", { locked });
     // Don't navigate on lock/unlock - use conditional rendering instead
     // to preserve navigation history and form state
   }, [initialized, locked]);

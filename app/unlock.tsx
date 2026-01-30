@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Screen from "../src/components/Screen";
 import { useAuthStore } from "../src/state/authStore";
 import { useTheme } from "../src/utils/useTheme";
-import { logger } from "../src/utils/logger";
+import { responsiveFontSize, responsiveSpacing } from "../src/utils/responsive";
 
 const PIN_LENGTH = 4;
 
@@ -71,26 +71,17 @@ export default function UnlockScreen() {
     }
     const attemptBiometric = async () => {
       if (!hasPin || !biometricAvailable || !biometricEnabled || busy) {
-        logger.info("[Biometric] Skipping", {
-          hasPin,
-          biometricAvailable,
-          biometricEnabled,
-          locked,
-          busy,
-        });
         return;
       }
       autoBiometricAttempted.current = true;
-      logger.info("[Biometric] Attempting Face ID...");
       setBusy(true);
       try {
         const success = await tryBiometric();
-        logger.info("[Biometric] Result", { success });
         if (success && isMounted.current) {
           unlock();
         }
       } catch (error) {
-        logger.error("[Biometric] Error", error);
+        // Biometric error - silently fail
       } finally {
         if (isMounted.current) {
           setBusy(false);
@@ -407,10 +398,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.accent,
       textTransform: "uppercase",
       letterSpacing: 1,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
     },
     title: {
-      fontSize: 32,
+      fontSize: responsiveFontSize(32),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
     },
@@ -418,7 +409,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       marginTop: theme.spacing.xs,
       color: theme.colors.muted,
       fontFamily: theme.font.regular,
-      maxWidth: 260,
+      maxWidth: responsiveSpacing(260),
     },
     pinContainer: {
       alignItems: "center",
@@ -426,7 +417,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.md,
     },
     pinTitle: {
-      fontSize: 18,
+      fontSize: responsiveFontSize(18),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
       marginBottom: theme.spacing.sm,
@@ -435,12 +426,12 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      gap: 24,
-      minHeight: 24,
+      gap: responsiveSpacing(24),
+      minHeight: responsiveSpacing(24),
     },
     pinDot: {
-      width: 14,
-      height: 14,
+      width: responsiveSpacing(14),
+      height: responsiveSpacing(14),
       borderRadius: 7,
       borderWidth: 1.5,
       borderColor: theme.colors.ink,
@@ -451,7 +442,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     error: {
       color: theme.colors.danger,
       fontFamily: theme.font.regular,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       marginTop: theme.spacing.sm,
     },
     keypad: {
@@ -461,11 +452,11 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     keypadRow: {
       flexDirection: "row",
-      gap: 20,
+      gap: responsiveSpacing(20),
     },
     keypadButton: {
-      width: 75,
-      height: 75,
+      width: responsiveSpacing(75),
+      height: responsiveSpacing(75),
       borderRadius: 38,
       borderWidth: 1,
       borderColor: theme.colors.outline,
@@ -484,10 +475,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     keypadText: {
       fontFamily: theme.font.regular,
       color: theme.colors.ink,
-      fontSize: 28,
+      fontSize: responsiveFontSize(28),
     },
     keypadButtonPlaceholder: {
-      width: 75,
+      width: responsiveSpacing(75),
     },
     spacer: {
       flex: 1,

@@ -5,6 +5,7 @@
 
 import { StyleSheet } from "react-native";
 import { useTheme } from "../../utils/useTheme";
+import { responsiveFontSize, responsiveSpacing } from "../../utils/responsive";
 
 export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
@@ -46,7 +47,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     sectionTitle: {
       fontFamily: theme.font.bold,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       color: theme.colors.accent,
       textTransform: "uppercase",
       letterSpacing: 1.5,
@@ -58,7 +59,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     label: {
       fontFamily: theme.font.bold,
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       color: theme.colors.muted,
       marginBottom: theme.spacing.xs,
       marginLeft: 4,
@@ -82,7 +83,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingVertical: 14,
       color: theme.colors.ink,
       fontFamily: theme.font.regular,
-      fontSize: 16,
+      fontSize: responsiveFontSize(16),
     },
     cardNumberRow: {
       flexDirection: "row",
@@ -93,8 +94,8 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       flex: 1,
     },
     cardBrand: {
-      width: 32,
-      height: 24,
+      width: responsiveSpacing(32),
+      height: responsiveSpacing(24),
       borderRadius: 4,
       alignItems: "center",
       justifyContent: "center",
@@ -126,7 +127,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     tagChipText: {
       fontFamily: theme.font.regular,
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       lineHeight: 18,
       includeFontPadding: false,
     },
@@ -144,7 +145,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     addTagButtonText: {
       fontFamily: theme.font.bold,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
       color: theme.colors.accent,
       lineHeight: 18,
       includeFontPadding: false,
@@ -155,7 +156,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingHorizontal: 14,
       color: theme.colors.ink,
       fontFamily: theme.font.regular,
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       borderRadius: 20,
       borderWidth: 1,
       includeFontPadding: false,
@@ -175,7 +176,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     suggestionText: {
       fontFamily: theme.font.regular,
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
     },
     existingTags: {
       marginTop: theme.spacing.sm,
@@ -189,13 +190,13 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     existingTagsTitle: {
       fontFamily: theme.font.bold,
-      fontSize: 13,
+      fontSize: responsiveFontSize(13),
       letterSpacing: 0.2,
       color: theme.colors.muted,
     },
     existingTagsHint: {
       fontFamily: theme.font.regular,
-      fontSize: 12,
+      fontSize: responsiveFontSize(12),
       color: theme.colors.muted,
       opacity: 0.8,
     },
@@ -216,13 +217,13 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     existingTagText: {
       fontFamily: theme.font.bold,
-      fontSize: 14,
+      fontSize: responsiveFontSize(14),
     },
     errorText: {
       marginTop: 6,
       marginLeft: 4,
       fontFamily: theme.font.regular,
-      fontSize: 12.5,
+      fontSize: responsiveFontSize(12.5),
       color: theme.colors.danger,
     },
     modalBackdrop: {
@@ -244,7 +245,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
     modalTitle: {
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
-      fontSize: 20,
+      fontSize: responsiveFontSize(20),
       marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
@@ -252,7 +253,7 @@ export const getCardFormStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       textAlign: "center",
-      fontSize: 15,
+      fontSize: responsiveFontSize(15),
       lineHeight: 22,
       marginBottom: theme.spacing.xl,
     },
