@@ -34,6 +34,7 @@ export function AppearanceSettingsSection(_props: any) {
           subLabel={currentThemeLabel}
           iconName="contrast-outline"
           iconColor={theme.colors.accent}
+          inlineSubLabel
           rightContent={
             <Ionicons
               name="chevron-forward"

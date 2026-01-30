@@ -80,18 +80,19 @@ export function SecuritySettingsSection(_props: any) {
           iconName="finger-print-outline"
           iconColor={theme.colors.accent}
           rightContent={
-            <Switch
-              value={biometricEnabled}
-              onValueChange={setBiometricEnabled}
-              disabled={!hasPin || !biometricAvailable}
-              trackColor={{
-                false: theme.colors.outline,
-                true: theme.colors.accent,
-              }}
-              thumbColor={theme.colors.surface}
-            />
+            <View style={{ height: 24, justifyContent: "center" }}>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={setBiometricEnabled}
+                disabled={!hasPin || !biometricAvailable}
+                trackColor={{
+                  false: theme.colors.outline,
+                  true: theme.colors.accent,
+                }}
+                thumbColor={theme.colors.surface}
+              />
+            </View>
           }
-          compact
         />
 
         <View style={styles.divider} />
@@ -101,6 +102,7 @@ export function SecuritySettingsSection(_props: any) {
           iconName="lock-closed-outline"
           subLabel={currentTimeoutLabel}
           iconColor={theme.colors.accent}
+          inlineSubLabel
           rightContent={
             <Ionicons
               name="chevron-forward"
@@ -118,6 +120,7 @@ export function SecuritySettingsSection(_props: any) {
           iconName="time-outline"
           subLabel={currentClipboardLabel}
           iconColor={theme.colors.accent}
+          inlineSubLabel
           rightContent={
             <Ionicons
               name="chevron-forward"

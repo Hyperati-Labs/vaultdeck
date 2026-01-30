@@ -22,6 +22,7 @@ type SettingsRowProps = {
   labelColor?: string;
   iconColor?: string;
   compact?: boolean;
+  inlineSubLabel?: boolean;
 } & Partial<TouchableOpacityProps>;
 
 export function SettingsRow({
@@ -36,6 +37,7 @@ export function SettingsRow({
   labelColor,
   iconColor,
   compact = false,
+  inlineSubLabel = false,
   ...touchableProps
 }: SettingsRowProps) {
   const theme = useTheme();
@@ -58,9 +60,22 @@ export function SettingsRow({
         <Text style={[styles.rowLabel, labelColor && { color: labelColor }]}>
           {label}
         </Text>
-        {subLabel ? <Text style={styles.rowSubLabel}>{subLabel}</Text> : null}
+        {!inlineSubLabel && subLabel ? (
+          <Text style={styles.rowSubLabel}>{subLabel}</Text>
+        ) : null}
       </View>
-      {rightContent}
+      {inlineSubLabel ? (
+        <View style={styles.rowRight}>
+          {subLabel ? (
+            <Text style={styles.rowSubLabelInline} numberOfLines={1}>
+              {subLabel}
+            </Text>
+          ) : null}
+          {rightContent}
+        </View>
+      ) : (
+        rightContent
+      )}
     </View>
   );
 
@@ -107,6 +122,12 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     rowContent: {
       flex: 1,
     },
+    rowRight: {
+      marginLeft: theme.spacing.sm,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.xs,
+    },
     rowLabel: {
       fontSize: 16,
       fontFamily: theme.font.regular,
@@ -117,5 +138,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.regular,
       color: theme.colors.muted,
       marginTop: 2,
+    },
+    rowSubLabelInline: {
+      fontSize: 14,
+      fontFamily: theme.font.regular,
+      color: theme.colors.muted,
     },
   });

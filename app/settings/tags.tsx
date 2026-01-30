@@ -41,17 +41,7 @@ export default function TagsManagerScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: theme.spacing.sm,
-          paddingTop: theme.spacing.md,
-          paddingBottom: theme.spacing.xl,
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <TagManagerSettingsSection />
-      </ScrollView>
+      <TagManagerSettingsSection />
     </Screen>
   );
 }

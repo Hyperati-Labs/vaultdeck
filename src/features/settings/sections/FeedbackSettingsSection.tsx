@@ -22,17 +22,18 @@ export function FeedbackSettingsSection(_props: any) {
           iconName="pulse-outline"
           iconColor={theme.colors.accent}
           rightContent={
-            <Switch
-              value={hapticsEnabled}
-              onValueChange={setHapticsEnabled}
-              trackColor={{
-                false: theme.colors.outline,
-                true: theme.colors.accent,
-              }}
-              thumbColor={theme.colors.surface}
-            />
+            <View style={{ height: 24, justifyContent: "center" }}>
+              <Switch
+                value={hapticsEnabled}
+                onValueChange={setHapticsEnabled}
+                trackColor={{
+                  false: theme.colors.outline,
+                  true: theme.colors.accent,
+                }}
+                thumbColor={theme.colors.surface}
+              />
+            </View>
           }
-          compact
         />
       </View>
     </View>
