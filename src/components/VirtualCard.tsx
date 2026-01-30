@@ -45,7 +45,6 @@ export default function VirtualCard({
   const breathe = useRef(new Animated.Value(0)).current;
   const { impact } = useHaptics();
 
-  // Idle breathing animation
   React.useEffect(() => {
     const breathing = Animated.loop(
       Animated.sequence([

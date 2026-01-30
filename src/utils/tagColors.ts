@@ -162,7 +162,7 @@ function hashTag(tag: string) {
   let hash = 0;
   for (let i = 0; i < tag.length; i += 1) {
     hash = (hash << 5) - hash + tag.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
+    hash |= 0;
   }
   return Math.abs(hash);
 }

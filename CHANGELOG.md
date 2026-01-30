@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 2026-01-31
+
+### Fixed
+
+- Responsive UI refinements with improved layout scaling across devices.
+- Tag manager statistics
+- Removed all development logging statements for cleaner codebase.
+
 ## [1.2.2] - 2026-01-30
 
 ### Improved

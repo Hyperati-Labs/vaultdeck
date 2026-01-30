@@ -66,7 +66,6 @@ export default function CardForm({
     null
   );
 
-  // Use extracted hooks for form state management
   const formState = useCardFormState(initial);
   const { vault, setTagColor } = useVaultStore();
   const tags = useCardTags(initial?.tags, vault ?? undefined);
@@ -75,7 +74,6 @@ export default function CardForm({
   const formatting = useCardFormatting();
   const { impact } = useHaptics();
 
-  // Detect card type from card number
   const cardType = reactUseMemo(
     () => detectCardType(formState.cardNumber),
     [formState.cardNumber]
@@ -88,7 +86,6 @@ export default function CardForm({
     (attemptedSubmit || opts.touched || opts.hasValue) &&
     Boolean(validation.errors[fieldKey]);
 
-  // Handle form submission
   const handleSubmit = () => {
     setAttemptedSubmit(true);
     if (!validation.canSubmit) return;

@@ -104,7 +104,6 @@ export default function CardDetailScreen() {
     impact(Haptics.ImpactFeedbackStyle.Light);
     setCopyNotice(`Copied. Clears in ${clipboardTimeoutSeconds}s.`);
 
-    // Fade in animation
     Animated.timing(noticeOpacity, {
       toValue: 1,
       duration: 200,
@@ -115,7 +114,6 @@ export default function CardDetailScreen() {
       clearTimeout(noticeTimeoutRef.current);
     }
     noticeTimeoutRef.current = setTimeout(() => {
-      // Fade out animation
       Animated.timing(noticeOpacity, {
         toValue: 0,
         duration: 300,

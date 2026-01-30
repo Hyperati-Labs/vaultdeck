@@ -1,15 +1,6 @@
-/**
- * useCardFormState Hook
- * Manages all form field state for card creation/editing
- * Extracted from CardForm component for reusability and testability
- */
-
 import { useState } from "react";
 import type { Card } from "../../../types/vault";
 
-/**
- * State managed by the hook
- */
 export interface CardFormState {
   nickname: string;
   issuer: string;
@@ -22,11 +13,6 @@ export interface CardFormState {
   tagInputVisible: boolean;
 }
 
-/**
- * Hook that provides card form state management
- * @param initial - Initial card data (for edit mode)
- * @returns State object with all fields and setters
- */
 export function useCardFormState(initial?: Partial<Card>) {
   const [nickname, setNickname] = useState(initial?.nickname ?? "");
   const [issuer, setIssuer] = useState(initial?.issuer ?? "");

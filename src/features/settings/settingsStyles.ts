@@ -151,7 +151,7 @@ export const getSettingsStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.outline,
       paddingHorizontal: theme.spacing.md,
-      paddingRight: theme.spacing.xl, // leave space for eye icon
+      paddingRight: theme.spacing.xl,
       paddingVertical: theme.spacing.sm,
       marginBottom: theme.spacing.lg,
       position: "relative",

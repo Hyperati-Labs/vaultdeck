@@ -3,7 +3,7 @@
     "name": "VaultDeck",
     "slug": "vaultdeck",
     "scheme": "vaultdeck",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/app_icon.png",

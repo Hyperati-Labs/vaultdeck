@@ -646,7 +646,6 @@ export default function Index() {
 
 const getStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    // cardTitleRow removed (no longer used)
     cardTagRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -748,7 +747,7 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: "space-between",
       gap: theme.spacing.sm,
     },
-    // cardTagCount removed (showing only heart icon now)
+
     cardFooter: {
       marginTop: theme.spacing.sm,
       flexDirection: "row",
@@ -807,14 +806,14 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     quickFilters: {
       marginTop: theme.spacing.sm,
-      marginHorizontal: -theme.spacing.lg, // Bleed to edges
+      marginHorizontal: -theme.spacing.lg,
     },
     quickFiltersScroll: {
       paddingHorizontal: theme.spacing.lg,
       flexDirection: "row",
       gap: theme.spacing.sm,
       alignItems: "center",
-      paddingBottom: responsiveSpacing(4), // Space for shadow/elevation if needed
+      paddingBottom: responsiveSpacing(4),
     },
     filterChip: {
       paddingVertical: responsiveSpacing(5),

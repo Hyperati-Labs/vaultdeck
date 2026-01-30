@@ -1,8 +1,3 @@
-/**
- * CardForm component styles
- * Extracted from CardForm.tsx for better maintainability
- */
-
 import { StyleSheet } from "react-native";
 import { useTheme } from "../../utils/useTheme";
 import { responsiveFontSize, responsiveSpacing } from "../../utils/responsive";

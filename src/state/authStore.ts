@@ -50,7 +50,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   autoLockSeconds: DEFAULT_AUTO_LOCK_SECONDS,
   autoLockBypass: false,
   loadAuthState: async () => {
-    const start = Date.now();
     const [salt, hash, autoLock, biometricEnabled, pinLengthRaw] =
       await Promise.all([
         getItem(PIN_SALT_KEY),

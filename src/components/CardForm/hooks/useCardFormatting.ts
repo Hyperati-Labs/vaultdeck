@@ -1,4 +1,3 @@
-// Local formatter helpers (no global registry) kept in this hook scope
 const formatCardNumber = (value: string): string =>
   value.replace(/\D/g, "").slice(0, 19);
 
@@ -36,10 +35,6 @@ const formatDisplayCardNumber = (digits: string): string => {
   return groups.join(" ");
 };
 
-/**
- * useCardFormatting Hook
- * Provides formatting functions for card form inputs using local helpers
- */
 export function useCardFormatting() {
   return {
     handleExpiryChange: formatExpiryDate,

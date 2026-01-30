@@ -84,8 +84,6 @@ export default function RootLayout() {
     if (!initialized) {
       return;
     }
-    // Don't navigate on lock/unlock - use conditional rendering instead
-    // to preserve navigation history and form state
   }, [initialized, locked]);
 
   useEffect(() => {

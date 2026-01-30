@@ -164,7 +164,7 @@ export default function ChangePinScreen() {
 
   const getTargetLength = () => {
     if (step === "current") return storedPinLength ?? 4;
-    if (step === "next") return 4; // Placeholder for dots
+    if (step === "next") return 4;
     return nextPin.length;
   };
 

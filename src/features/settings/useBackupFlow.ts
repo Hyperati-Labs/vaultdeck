@@ -222,7 +222,7 @@ export function useBackupFlow({
       dispatch({ type: "SET_PENDING_IMPORT_URI", value: null });
       dispatch({ type: "SET_IMPORT_WARNING", value: false });
       dispatch({ type: "SET_BUSY", value: false });
-      // Ensure action is cleared when operation completes or is cancelled
+
       dispatch({ type: "SET_ACTION", value: null });
     }
   };

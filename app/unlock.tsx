@@ -81,7 +81,7 @@ export default function UnlockScreen() {
           unlock();
         }
       } catch (error) {
-        // Biometric error - silently fail
+        void error;
       } finally {
         if (isMounted.current) {
           setBusy(false);
@@ -207,7 +207,6 @@ export default function UnlockScreen() {
     const newPin = pin + String(digit);
     setPinValue(newPin);
 
-    // Auto-advance to confirm field when PIN reaches 4 digits during setup
     if (isSetup && newPin.length === PIN_LENGTH) {
       setActiveField("confirm");
     }

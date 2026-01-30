@@ -428,7 +428,6 @@ describe("vaultStorage native flow", () => {
       mod.VaultPassphraseRequiredError
     );
 
-    // With passphrase but missing file should be corrupt
     await expect(mod.importVaultBlob(undefined, "pass")).rejects.toThrow(
       mod.VaultCorruptError
     );

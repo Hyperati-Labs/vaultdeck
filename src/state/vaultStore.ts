@@ -49,7 +49,6 @@ function compareCards(a: Card, b: Card) {
   const af = a.favorite ? 1 : 0;
   const bf = b.favorite ? 1 : 0;
   if (af !== bf) {
-    // Favorites first
     return bf - af;
   }
   return a.nickname.toLowerCase().localeCompare(b.nickname.toLowerCase());
@@ -78,12 +77,10 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         return;
       }
 
-      // Ensure tagColors map exists for legacy data
       if (!vault.tagColors) {
         vault.tagColors = {};
       }
 
-      // Ensure cards are sorted alphabetically by nickname on load
       vault.cards.sort(compareCards);
 
       set({ vault, loading: false, error: null });
@@ -115,7 +112,6 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       cards = [...vault.cards, created];
     }
 
-    // Sort favorites first, then alphabetically by nickname
     cards.sort(compareCards);
 
     const next: VaultData = { ...vault, cards, updatedAt };
@@ -128,7 +124,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       return;
     }
     const cards = vault.cards.filter((item) => item.id !== cardId);
-    // Maintain internal sort: favorites first, then nickname
+
     cards.sort(compareCards);
 
     const next: VaultData = { ...vault, cards, updatedAt: nowIso() };
@@ -144,7 +140,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       const fresh = emptyVault();
       await writeVaultData(fresh);
       set({ vault: fresh, error: null, loading: false });
-    } catch (err) {
+    } catch {
       set({ vault: null, error: null, loading: false });
     }
   },

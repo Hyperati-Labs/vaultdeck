@@ -13,7 +13,6 @@ import {
   BREAKPOINTS,
 } from "../src/utils/responsive";
 
-// Mock Dimensions
 jest.mock("react-native", () => ({
   Dimensions: {
     get: jest.fn(),
@@ -34,26 +33,26 @@ describe("Responsive Utils", () => {
       mockDimensions.get.mockReturnValue({ width: 414, height: 896 } as any);
       const result = responsiveFontSize(16);
       expect(result).toBeGreaterThan(16);
-      expect(result).toBeLessThanOrEqual(20); // Max 125%
+      expect(result).toBeLessThanOrEqual(20);
     });
 
     it("should scale down on smaller screens", () => {
       mockDimensions.get.mockReturnValue({ width: 320, height: 667 } as any);
       const result = responsiveFontSize(16);
       expect(result).toBeLessThan(16);
-      expect(result).toBeGreaterThanOrEqual(14); // Min 85%
+      expect(result).toBeGreaterThanOrEqual(14);
     });
 
     it("should not exceed max bounds", () => {
       mockDimensions.get.mockReturnValue({ width: 800, height: 1200 } as any);
       const result = responsiveFontSize(16);
-      expect(result).toBeLessThanOrEqual(20); // Max 125%
+      expect(result).toBeLessThanOrEqual(20);
     });
 
     it("should not go below min bounds", () => {
       mockDimensions.get.mockReturnValue({ width: 200, height: 400 } as any);
       const result = responsiveFontSize(16);
-      expect(result).toBeGreaterThanOrEqual(14); // Min 85%
+      expect(result).toBeGreaterThanOrEqual(14);
     });
   });
 
@@ -79,8 +78,8 @@ describe("Responsive Utils", () => {
     it("should respect min/max bounds", () => {
       mockDimensions.get.mockReturnValue({ width: 1000, height: 1200 } as any);
       const result = responsiveSpacing(16);
-      expect(result).toBeLessThanOrEqual(21); // Max 130%
-      expect(result).toBeGreaterThanOrEqual(13); // Min 80%
+      expect(result).toBeLessThanOrEqual(21);
+      expect(result).toBeGreaterThanOrEqual(13);
     });
   });
 
@@ -161,7 +160,7 @@ describe("Responsive Utils", () => {
     it("should auto-detect device category if not provided", () => {
       mockDimensions.get.mockReturnValue({ width: 320, height: 667 } as any);
       const spacing = getDeviceSpacing();
-      expect(spacing.xs).toBe(4); // Small device spacing
+      expect(spacing.xs).toBe(4);
     });
   });
 
@@ -193,7 +192,7 @@ describe("Responsive Utils", () => {
     it("should return responsive card dimensions", () => {
       mockDimensions.get.mockReturnValue({ width: 375, height: 800 } as any);
       const result = getCardDimensions();
-      expect(result.width).toBe(335); // 375 - 40
+      expect(result.width).toBe(335);
       expect(result.height).toBeCloseTo(result.width / 1.586);
     });
 
@@ -207,7 +206,7 @@ describe("Responsive Utils", () => {
     it("should account for padding on small screens", () => {
       mockDimensions.get.mockReturnValue({ width: 320, height: 667 } as any);
       const result = getCardDimensions();
-      expect(result.width).toBe(280); // 320 - 40
+      expect(result.width).toBe(280);
     });
   });
 
@@ -215,13 +214,13 @@ describe("Responsive Utils", () => {
     it("should return max width for smaller screens", () => {
       mockDimensions.get.mockReturnValue({ width: 320, height: 667 } as any);
       const result = getModalWidth();
-      expect(result).toBe(288); // 320 - 32
+      expect(result).toBe(288);
     });
 
     it("should return max modal width for larger screens", () => {
       mockDimensions.get.mockReturnValue({ width: 800, height: 1200 } as any);
       const result = getModalWidth();
-      expect(result).toBe(400); // maxModalWidth
+      expect(result).toBe(400);
     });
 
     it("should not exceed max modal width", () => {

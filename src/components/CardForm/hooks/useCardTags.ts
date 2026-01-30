@@ -1,28 +1,13 @@
-/**
- * useCardTags Hook
- * Manages tag selection, input, and autocomplete suggestions
- * Extracted from CardForm component for reusability
- */
-
 import { useMemo, useState, useEffect, useRef } from "react";
 import { TextInput } from "react-native";
 import type { VaultData } from "../../../types/vault";
 
-/**
- * Hook that provides tag management for card form
- * @param initial - Initial selected tags
- * @param vault - Vault data containing all cards for tag suggestions
- * @returns Tag state and handlers
- */
 export function useCardTags(initial?: string[], vault?: VaultData) {
   const [selectedTags, setSelectedTags] = useState<string[]>(initial ?? []);
   const [tagInput, setTagInput] = useState("");
   const [tagInputVisible, setTagInputVisible] = useState(false);
   const tagInputRef = useRef<TextInput>(null);
 
-  /**
-   * Get all tags from vault cards, deduplicated and sorted
-   */
   const allVaultTags = useMemo(() => {
     const set = new Set<string>();
     vault?.cards.forEach((c) =>
@@ -31,18 +16,11 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
     return Array.from(set).sort();
   }, [vault]);
 
-  /**
-   * Vault tags that are not yet selected
-   */
   const availableTags = useMemo(
     () => allVaultTags.filter((t) => !selectedTags.includes(t)),
     [allVaultTags, selectedTags]
   );
 
-  /**
-   * Get filtered suggestions matching current input
-   * Excludes already selected tags
-   */
   const tagSuggestions = useMemo(() => {
     if (!tagInput.trim()) return [];
     const input = tagInput.trim().toLowerCase();
@@ -51,9 +29,6 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
     );
   }, [allVaultTags, tagInput, selectedTags]);
 
-  /**
-   * Auto-focus tag input when it becomes visible
-   */
   useEffect(() => {
     if (tagInputVisible) {
       const timer = setTimeout(() => {
@@ -63,10 +38,6 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
     }
   }, [tagInputVisible]);
 
-  /**
-   * Handle tag input changes
-   * Auto-add tag if input ends with comma or space
-   */
   const handleTagInput = (text: string) => {
     const lower = text.toLowerCase();
     if (lower.endsWith(",") || lower.endsWith(" ")) {
@@ -82,9 +53,6 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
     setTagInput(text);
   };
 
-  /**
-   * Add a tag to selected tags
-   */
   const addTag = (tag: string) => {
     if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
@@ -93,9 +61,6 @@ export function useCardTags(initial?: string[], vault?: VaultData) {
     setTagInputVisible(false);
   };
 
-  /**
-   * Remove a tag from selected tags
-   */
   const removeTag = (tag: string) => {
     setSelectedTags(selectedTags.filter((t: string) => t !== tag));
   };

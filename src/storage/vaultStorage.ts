@@ -93,9 +93,7 @@ export async function deleteVaultBlob(): Promise<void> {
     if (info.exists) {
       await FileSystem.deleteAsync(VAULT_BLOB_PATH, { idempotent: true });
     }
-  } catch {
-    // Ignore delete failures; reset flow will re-create data.
-  }
+  } catch {}
 }
 
 export async function vaultBlobExists(): Promise<boolean> {
@@ -356,7 +354,7 @@ export async function readVaultData(
     const payload = parseEncryptedPayload(raw);
     const plaintext = decryptPayload(payload, decodeKeyBase64(key));
     return JSON.parse(plaintext) as VaultData;
-  } catch (error) {
+  } catch {
     throw new VaultCorruptError();
   }
 }

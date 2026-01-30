@@ -44,10 +44,6 @@ const isBackupFile = (pathOrName: string | undefined) => {
   return backupExtensions.some((ext) => lower.endsWith(ext));
 };
 
-/**
- * Opens a document picker and returns a selected backup file URI, or null if cancelled.
- * Throws InvalidBackupFileError when the selected file is not a supported backup.
- */
 export async function selectBackupFile(): Promise<string | null> {
   const result = await getDocumentAsync({
     type: "*/*",
@@ -66,10 +62,6 @@ export async function selectBackupFile(): Promise<string | null> {
   return asset.uri;
 }
 
-/**
- * Persist/export an encrypted backup file to user-visible storage.
- * On Android uses SAF, on iOS uses share sheet, web is not supported here.
- */
 export async function saveBackupFile(exportedPath: string): Promise<boolean> {
   if (Platform.OS === "web") {
     throw new ExportNotSupportedError();
@@ -79,7 +71,6 @@ export async function saveBackupFile(exportedPath: string): Promise<boolean> {
     const permissions =
       await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
     if (!permissions.granted) {
-      // User cancelled picker; treat as no-op
       return false;
     }
     const filename = getBackupFilename();
@@ -97,7 +88,6 @@ export async function saveBackupFile(exportedPath: string): Promise<boolean> {
     return true;
   }
 
-  // iOS and other native platforms: share sheet
   const filename = getBackupFilename();
   const iosSharePath = `${FileSystem.cacheDirectory}${filename}`;
   await FileSystem.copyAsync({ from: exportedPath, to: iosSharePath });

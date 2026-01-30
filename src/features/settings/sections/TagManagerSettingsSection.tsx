@@ -76,9 +76,9 @@ export function TagManagerSettingsSection() {
 
   return (
     <>
-      {/* Sticky Header Content */}
+      {}
       <View style={localStyles.stickyHeader}>
-        {/* Statistics Banner */}
+        {}
         <View style={localStyles.statsContainer}>
           <View style={localStyles.statCard}>
             <Ionicons name="pricetags" size={20} color={theme.colors.accent} />
@@ -107,7 +107,7 @@ export function TagManagerSettingsSection() {
           </View>
         </View>
 
-        {/* Search Bar */}
+        {}
         {tagEntries.length > 0 && (
           <View style={localStyles.searchContainer}>
             <Ionicons
@@ -139,7 +139,7 @@ export function TagManagerSettingsSection() {
         )}
       </View>
 
-      {/* Scrollable Tag List */}
+      {}
       <ScrollView
         style={localStyles.scrollContainer}
         contentContainerStyle={localStyles.scrollContent}
@@ -180,7 +180,7 @@ export function TagManagerSettingsSection() {
               return (
                 <View key={tag} style={localStyles.tagCard}>
                   <View style={localStyles.tagCardContent}>
-                    {/* Color Indicator */}
+                    {}
                     <TouchableOpacity
                       onPress={() => {
                         impact(Haptics.ImpactFeedbackStyle.Light);
@@ -202,7 +202,7 @@ export function TagManagerSettingsSection() {
                       />
                     </TouchableOpacity>
 
-                    {/* Tag Info */}
+                    {}
                     <View style={localStyles.tagInfo}>
                       <Text style={localStyles.tagName} numberOfLines={1}>
                         #{tag}
@@ -213,7 +213,7 @@ export function TagManagerSettingsSection() {
                     </View>
                   </View>
 
-                  {/* Action Buttons */}
+                  {}
                   <View style={localStyles.tagActions}>
                     <TouchableOpacity
                       onPress={() => {
@@ -258,7 +258,7 @@ export function TagManagerSettingsSection() {
         </View>
       </ScrollView>
 
-      {/* Color picker */}
+      {}
       <TagColorPicker
         visible={colorTarget !== null}
         tag={colorTarget}
@@ -276,7 +276,7 @@ export function TagManagerSettingsSection() {
         onClose={() => setColorTarget(null)}
       />
 
-      {/* Rename modal */}
+      {}
       <Modal visible={renameState !== null} transparent animationType="fade">
         <BlurView intensity={20} style={localStyles.modalBackdrop}>
           <Pressable
@@ -344,7 +344,7 @@ export function TagManagerSettingsSection() {
         </BlurView>
       </Modal>
 
-      {/* Delete modal */}
+      {}
       <Modal visible={deleteState !== null} transparent animationType="fade">
         <BlurView intensity={20} style={localStyles.modalBackdrop}>
           <Pressable
@@ -415,14 +415,12 @@ export function TagManagerSettingsSection() {
 
 const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    // Sticky Header
     stickyHeader: {
       paddingHorizontal: theme.spacing.sm,
       paddingTop: theme.spacing.md,
       paddingBottom: theme.spacing.sm,
     },
 
-    // Scrollable Container
     scrollContainer: {
       flex: 1,
     },
@@ -431,7 +429,6 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingBottom: theme.spacing.xl,
     },
 
-    // Statistics
     statsContainer: {
       flexDirection: "row",
       gap: theme.spacing.sm,
@@ -463,7 +460,6 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       textAlign: "center",
     },
 
-    // Search
     searchContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -489,7 +485,6 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       padding: 4,
     },
 
-    // Tag List
     tagList: {
       gap: theme.spacing.sm,
     },
@@ -572,7 +567,6 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
         : "rgba(176, 0, 32, 0.08)",
     },
 
-    // Empty & No Results
     emptyState: {
       alignItems: "center",
       paddingVertical: theme.spacing.xl * 2,
@@ -611,7 +605,6 @@ const getLocalStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.muted,
     },
 
-    // Modern Modals
     modalBackdrop: {
       flex: 1,
       justifyContent: "center",
