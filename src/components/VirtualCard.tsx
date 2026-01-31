@@ -1,5 +1,12 @@
 import React, { useMemo, useRef } from "react";
-import { Animated, PanResponder, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  PanResponder,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -21,8 +28,6 @@ type VirtualCardProps = {
   displayNumber: string;
 };
 
-const { width: CARD_WIDTH, height: CARD_HEIGHT } = getCardDimensions();
-
 const clampRotation = (value: number, limit: number) =>
   Math.max(-limit, Math.min(limit, value));
 
@@ -32,7 +37,12 @@ export default function VirtualCard({
   displayNumber,
 }: VirtualCardProps) {
   const theme = useTheme();
-  const styles = getStyles(theme);
+  const { width: windowWidth } = useWindowDimensions();
+  const { width: cardWidth, height: cardHeight } = useMemo(
+    () => getCardDimensions(),
+    [windowWidth]
+  );
+  const styles = getStyles(theme, cardWidth, cardHeight);
 
   const cardType = useMemo(
     () => detectCardType(card.cardNumber || ""),
@@ -214,7 +224,7 @@ export default function VirtualCard({
   );
 }
 
-const getStyles = (theme: any) =>
+const getStyles = (theme: any, cardWidth: number, cardHeight: number) =>
   StyleSheet.create({
     container: {
       alignItems: "center",
@@ -222,8 +232,8 @@ const getStyles = (theme: any) =>
       marginVertical: theme.spacing.xl,
     },
     cardShell: {
-      width: CARD_WIDTH,
-      height: CARD_HEIGHT,
+      width: cardWidth,
+      height: cardHeight,
     },
     cardFace: {
       position: "absolute",

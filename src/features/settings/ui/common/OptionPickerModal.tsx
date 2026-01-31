@@ -28,7 +28,12 @@ export function OptionPickerModal<T>({
   const styles = getSettingsStyles(theme);
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <View style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
           <Text style={styles.modalTitle}>{title}</Text>

@@ -6,15 +6,19 @@ import { useState } from "react";
 import { getSettingsStyles } from "../settingsStyles";
 import { useTheme } from "../../../utils/useTheme";
 import { useThemeStore, type ThemePreference } from "../../../state/themeStore";
+import { ACCENT_LABELS } from "../../../utils/theme";
 import { SettingsRow } from "../ui/common/SettingsRow";
 import { OptionPickerModal } from "../ui/common/OptionPickerModal";
+import { AccentColorPickerModal } from "../ui/common/AccentColorPickerModal";
 
 export function AppearanceSettingsSection(_props: any) {
   const theme = useTheme();
   const styles = getSettingsStyles(theme);
-  const { preference, setPreference } = useThemeStore();
+  const { preference, setPreference, accentKey, setAccentKey } =
+    useThemeStore();
   const router = useRouter();
   const [themePickerOpen, setThemePickerOpen] = useState(false);
+  const [accentPickerOpen, setAccentPickerOpen] = useState(false);
 
   const themes: { label: string; value: ThemePreference }[] = [
     { label: "Auto", value: "system" },
@@ -24,6 +28,7 @@ export function AppearanceSettingsSection(_props: any) {
 
   const currentThemeLabel =
     themes.find((t) => t.value === preference)?.label ?? "Auto";
+  const currentAccentLabel = ACCENT_LABELS[accentKey] ?? "Amber";
 
   return (
     <View style={styles.section}>
@@ -43,6 +48,24 @@ export function AppearanceSettingsSection(_props: any) {
             />
           }
           onPress={() => setThemePickerOpen(true)}
+        />
+
+        <View style={styles.divider} />
+
+        <SettingsRow
+          label="Accent color"
+          subLabel={currentAccentLabel}
+          iconName="color-palette-outline"
+          iconColor={theme.colors.accent}
+          inlineSubLabel
+          rightContent={
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={theme.colors.muted}
+            />
+          }
+          onPress={() => setAccentPickerOpen(true)}
         />
 
         <View style={styles.divider} />
@@ -69,6 +92,13 @@ export function AppearanceSettingsSection(_props: any) {
         value={preference}
         onSelect={(value: ThemePreference) => setPreference(value)}
         onClose={() => setThemePickerOpen(false)}
+      />
+
+      <AccentColorPickerModal
+        visible={accentPickerOpen}
+        value={accentKey}
+        onSelect={setAccentKey}
+        onClose={() => setAccentPickerOpen(false)}
       />
     </View>
   );

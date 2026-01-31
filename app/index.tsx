@@ -511,22 +511,29 @@ export default function Index() {
                       {longPressedCard.expiryMonth}/{longPressedCard.expiryYear}
                     </Text>
                     <View style={styles.cardTypePill}>
-                      <CardBrandIcon
-                        type={
-                          longPressedCard.cardNumber
-                            ? detectCardType(longPressedCard.cardNumber)
-                            : "unknown"
-                        }
-                        size={18}
-                      />
-                      <Text style={styles.cardTypePillText}>
-                        {longPressedCard.cardNumber
+                      {(() => {
+                        const menuCardType = longPressedCard.cardNumber
                           ? detectCardType(longPressedCard.cardNumber)
-                              .charAt(0)
-                              .toUpperCase() +
-                            detectCardType(longPressedCard.cardNumber).slice(1)
-                          : "Card"}
-                      </Text>
+                          : "unknown";
+                        const menuCardTypeLabel =
+                          menuCardType === "visa"
+                            ? "Visa"
+                            : menuCardType === "mastercard"
+                              ? "Mastercard"
+                              : menuCardType === "amex"
+                                ? "AMEX"
+                                : menuCardType === "discover"
+                                  ? "Discover"
+                                  : "Card";
+                        return (
+                          <>
+                            <CardBrandIcon type={menuCardType} size={18} />
+                            <Text style={styles.cardTypePillText}>
+                              {menuCardTypeLabel}
+                            </Text>
+                          </>
+                        );
+                      })()}
                     </View>
                   </View>
                 </GlassPanel>
@@ -796,13 +803,9 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: responsiveSpacing(19),
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: theme.isDark
-        ? "rgba(208, 123, 47, 0.15)"
-        : "rgba(208, 123, 47, 0.1)",
+      backgroundColor: theme.colors.accentSoft,
       borderWidth: 1,
-      borderColor: theme.isDark
-        ? "rgba(208, 123, 47, 0.4)"
-        : "rgba(208, 123, 47, 0.3)",
+      borderColor: theme.colors.accent,
     },
     quickFilters: {
       marginTop: theme.spacing.sm,

@@ -42,7 +42,12 @@ export function BackupPasswordModal({
   } = flow;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
       <BlurView intensity={20} style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
           <Text style={styles.modalTitle}>

@@ -29,31 +29,36 @@ export function SecuritySettingsSection(_props: any) {
 
   const timeouts = useMemo(
     () => [
-      { label: "Instant", value: 0 },
-      { label: "30s", value: 30 },
-      { label: "1m", value: 60 },
-      { label: "5m", value: 300 },
+      { label: "Instant", shortLabel: "Instant", value: 0 },
+      { label: "30 seconds", shortLabel: "30s", value: 30 },
+      { label: "1 minute", shortLabel: "1m", value: 60 },
+      { label: "5 minutes", shortLabel: "5m", value: 300 },
     ],
     []
   );
 
   const currentTimeoutLabel =
-    timeouts.find((t) => t.value === autoLockSeconds)?.label ??
-    `${autoLockSeconds}s`;
+    timeouts.find((t) => t.value === autoLockSeconds)?.shortLabel ??
+    (autoLockSeconds >= 60
+      ? `${Math.floor(autoLockSeconds / 60)}m`
+      : `${autoLockSeconds}s`);
 
   const clipboardTimeouts = useMemo(
     () => [
-      { label: "10s", value: 10 },
-      { label: "30s", value: 30 },
-      { label: "1m", value: 60 },
-      { label: "5m", value: 300 },
+      { label: "10 seconds", shortLabel: "10s", value: 10 },
+      { label: "30 seconds", shortLabel: "30s", value: 30 },
+      { label: "1 minute", shortLabel: "1m", value: 60 },
+      { label: "5 minutes", shortLabel: "5m", value: 300 },
     ],
     []
   );
 
   const currentClipboardLabel =
-    clipboardTimeouts.find((o) => o.value === clipboardTimeoutSeconds)?.label ??
-    `${clipboardTimeoutSeconds}s`;
+    clipboardTimeouts.find((o) => o.value === clipboardTimeoutSeconds)
+      ?.shortLabel ??
+    (clipboardTimeoutSeconds >= 60
+      ? `${Math.floor(clipboardTimeoutSeconds / 60)}m`
+      : `${clipboardTimeoutSeconds}s`);
 
   return (
     <View style={styles.section}>

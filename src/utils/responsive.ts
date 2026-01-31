@@ -91,11 +91,14 @@ export const isLargeDevice = (): boolean => {
   return getScreenWidth() >= BREAKPOINTS.XLARGE;
 };
 
+const CARD_ASPECT_RATIO = 1.586;
+const MAX_CARD_WIDTH = 420;
+
 export const getCardDimensions = () => {
   const horizontalPadding = 40;
   const screenWidth = getScreenWidth();
-  const cardWidth = screenWidth - horizontalPadding;
-  const cardHeight = cardWidth / 1.586;
+  const cardWidth = Math.min(screenWidth - horizontalPadding, MAX_CARD_WIDTH);
+  const cardHeight = cardWidth / CARD_ASPECT_RATIO;
 
   return {
     width: cardWidth,

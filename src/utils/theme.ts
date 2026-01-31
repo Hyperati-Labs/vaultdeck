@@ -35,6 +35,52 @@ export type Theme = {
   };
 };
 
+/** Accent palette: accent + accentSoft for light and dark mode */
+export type AccentPalette = {
+  light: { accent: string; accentSoft: string };
+  dark: { accent: string; accentSoft: string };
+};
+
+export type AccentKey = "amber" | "blue" | "green" | "violet" | "rose" | "teal";
+
+export const ACCENT_PALETTES: Record<AccentKey, AccentPalette> = {
+  amber: {
+    light: { accent: "#d07b2f", accentSoft: "#f6e2cf" },
+    dark: { accent: "#ff9f43", accentSoft: "#2b2117" },
+  },
+  blue: {
+    light: { accent: "#1a6bb3", accentSoft: "#e3f2fd" },
+    dark: { accent: "#4da6ff", accentSoft: "#1a2744" },
+  },
+  green: {
+    light: { accent: "#2e7d32", accentSoft: "#e8f5e9" },
+    dark: { accent: "#66bb6a", accentSoft: "#1b2e1b" },
+  },
+  violet: {
+    light: { accent: "#6a1b9a", accentSoft: "#f3e5f5" },
+    dark: { accent: "#ab47bc", accentSoft: "#2d1b33" },
+  },
+  rose: {
+    light: { accent: "#c2185b", accentSoft: "#fce4ec" },
+    dark: { accent: "#f06292", accentSoft: "#2d1b24" },
+  },
+  teal: {
+    light: { accent: "#00796b", accentSoft: "#e0f2f1" },
+    dark: { accent: "#26a69a", accentSoft: "#1b2e2c" },
+  },
+};
+
+export const ACCENT_LABELS: Record<AccentKey, string> = {
+  amber: "Amber",
+  blue: "Blue",
+  green: "Green",
+  violet: "Violet",
+  rose: "Rose",
+  teal: "Teal",
+};
+
+export const DEFAULT_ACCENT_KEY: AccentKey = "amber";
+
 export const themes: { light: Theme; dark: Theme } = {
   light: {
     isDark: false,

@@ -19,7 +19,12 @@ export function BackupSuccessModal({
   if (!message) return null;
 
   return (
-    <Modal visible={Boolean(message)} transparent animationType="fade">
+    <Modal
+      visible={Boolean(message)}
+      transparent
+      animationType="fade"
+      onRequestClose={onDismiss}
+    >
       <BlurView intensity={20} style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
           <Text style={styles.modalTitle}>Backup</Text>
