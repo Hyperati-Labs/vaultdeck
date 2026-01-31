@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - 2026-01-31
+
+### Added
+
+- Accent color customization with new picker modal for dynamic theme personalization.
+
+### Improved
+
+- Card dimensions calculation for better responsiveness across different device sizes.
+- Modal user experience with improved request close handling.
+- Card type display with enhanced labels and conditional rendering.
+
 ## [1.2.3] - 2026-01-31
 
 ### Fixed
