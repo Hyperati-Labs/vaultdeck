@@ -15,36 +15,56 @@ jest.mock("expo-crypto", () => ({
   CryptoDigestAlgorithm: { SHA256: "sha256" },
 }));
 
-jest.mock("../src/utils/pinResiliency", () => ({
-  withPinOperationTimeout: jest.fn((operation) => {
+jest.mock("../src/utils/pinResiliency", () => {
+  const actualModule = {
+    withPinOperationTimeout: jest.fn(),
+    withRetry: jest.fn(),
+    validatePinFormat: jest.fn(),
+    recordFailedAttempt: jest.fn(),
+    resetAttemptCount: jest.fn(),
+    isLocked: jest.fn(),
+    getLockoutRemainingMs: jest.fn(),
+  };
+
+  // Set default implementations
+  actualModule.withPinOperationTimeout.mockImplementation((operation) => {
     return operation().then((data: any) => ({
       data,
       error: null,
       isTransient: false,
       retryable: false,
     }));
-  }),
-  withRetry: jest.fn((operation) => {
-    return operation();
-  }),
-  validatePinFormat: jest.fn((pin) => /^\d{4,8}$/.test(pin)),
-  recordFailedAttempt: jest.fn(() =>
-    Promise.resolve({
-      success: false,
-      attemptCount: 1,
-      isLocked: false,
-      lockoutRemainingMs: 0,
-    })
-  ),
-  resetAttemptCount: jest.fn(() => Promise.resolve()),
-  isLocked: jest.fn(() => Promise.resolve(false)),
-  getLockoutRemainingMs: jest.fn(() => Promise.resolve(0)),
-}));
+  });
+  actualModule.withRetry.mockImplementation((operation) => operation());
+  actualModule.validatePinFormat.mockImplementation((pin) =>
+    /^\d{4,8}$/.test(pin)
+  );
+  actualModule.recordFailedAttempt.mockResolvedValue({
+    success: false,
+    attemptCount: 1,
+    isLocked: false,
+    lockoutRemainingMs: 0,
+  });
+  actualModule.resetAttemptCount.mockResolvedValue(undefined);
+  actualModule.isLocked.mockResolvedValue(false);
+  actualModule.getLockoutRemainingMs.mockResolvedValue(0);
+
+  return actualModule;
+});
 
 import * as Crypto from "expo-crypto";
 import * as LocalAuthentication from "expo-local-authentication";
 import { getItem, setItem } from "../src/storage/secureStore";
 import { useAuthStore } from "../src/state/authStore";
+import {
+  withPinOperationTimeout,
+  withRetry,
+  validatePinFormat,
+  recordFailedAttempt,
+  resetAttemptCount,
+  isLocked,
+  getLockoutRemainingMs,
+} from "../src/utils/pinResiliency";
 
 describe("authStore", () => {
   beforeEach(() => {
@@ -59,6 +79,29 @@ describe("authStore", () => {
       autoLockBypass: false,
     });
     jest.clearAllMocks();
+
+    // Restore default implementations after clearAllMocks
+    (withPinOperationTimeout as jest.Mock).mockImplementation((operation) => {
+      return operation().then((data: any) => ({
+        data,
+        error: null,
+        isTransient: false,
+        retryable: false,
+      }));
+    });
+    (withRetry as jest.Mock).mockImplementation((operation) => operation());
+    (validatePinFormat as jest.Mock).mockImplementation((pin) =>
+      /^\d{4,8}$/.test(pin)
+    );
+    (recordFailedAttempt as jest.Mock).mockResolvedValue({
+      success: false,
+      attemptCount: 1,
+      isLocked: false,
+      lockoutRemainingMs: 0,
+    });
+    (resetAttemptCount as jest.Mock).mockResolvedValue(undefined);
+    (isLocked as jest.Mock).mockResolvedValue(false);
+    (getLockoutRemainingMs as jest.Mock).mockResolvedValue(0);
   });
 
   it("loads auth state with stored values", async () => {
@@ -212,5 +255,180 @@ describe("authStore", () => {
     expect(useAuthStore.getState().locked).toBe(false);
     useAuthStore.getState().lock();
     expect(useAuthStore.getState().locked).toBe(true);
+  });
+
+  it("throws error when PIN format is invalid in setPin", async () => {
+    // Override the validatePinFormat mock to return false
+    (validatePinFormat as jest.Mock).mockImplementationOnce(() => false);
+
+    try {
+      await useAuthStore.getState().setPin("abc");
+      throw new Error("Should have thrown an error");
+    } catch (error: any) {
+      expect(error.message).toContain("Invalid PIN format");
+    }
+
+    // Verify the mock was called
+    expect(validatePinFormat).toHaveBeenCalled();
+  });
+
+  it("throws error when withPinOperationTimeout returns error in setPin", async () => {
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        data: null,
+        error: "TIMEOUT",
+        isTransient: true,
+        retryable: true,
+      })
+    );
+
+    try {
+      await useAuthStore.getState().setPin("1234");
+      throw new Error("Should have thrown an error");
+    } catch (error: any) {
+      expect(error.message).toContain("Failed to set PIN: TIMEOUT");
+    }
+  });
+
+  it("throws error when withPinOperationTimeout returns no data in setPin", async () => {
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        data: null,
+        error: null,
+        isTransient: false,
+        retryable: false,
+      })
+    );
+
+    try {
+      await useAuthStore.getState().setPin("1234");
+      throw new Error("Should have thrown an error");
+    } catch (error: any) {
+      expect(error.message).toContain("PIN setup operation failed");
+    }
+  });
+
+  it("throws error in setPin catch block", async () => {
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.reject(new Error("Unexpected error"))
+    );
+
+    try {
+      await useAuthStore.getState().setPin("1234");
+      throw new Error("Should have thrown an error");
+    } catch (error: any) {
+      expect(error.message).toContain("Failed to set PIN");
+      expect(error.message).toContain("Unexpected error");
+    }
+  });
+
+  it("returns false in updatePin when setPin throws error", async () => {
+    const verify = jest
+      .spyOn(useAuthStore.getState(), "verifyPin")
+      .mockResolvedValueOnce({ success: true });
+    const setPin = jest
+      .spyOn(useAuthStore.getState(), "setPin")
+      .mockRejectedValueOnce(new Error("Setup failed"));
+
+    const result = await useAuthStore.getState().updatePin("0000", "1111");
+
+    expect(result).toBe(false);
+    expect(verify).toHaveBeenCalled();
+    expect(setPin).toHaveBeenCalled();
+  });
+
+  it("returns lockout info when user is locked out", async () => {
+    (isLocked as jest.Mock).mockResolvedValueOnce(true);
+    (getLockoutRemainingMs as jest.Mock).mockResolvedValueOnce(30000);
+
+    const result = await useAuthStore.getState().verifyPin("1234");
+
+    expect(result.success).toBe(false);
+    expect(result.resiliency?.isLocked).toBe(true);
+    expect(result.resiliency?.lockoutRemainingMs).toBe(30000);
+    expect(useAuthStore.getState().pinLocked).toBe(true);
+    expect(useAuthStore.getState().pinLockoutRemainingMs).toBe(30000);
+  });
+
+  it("returns false when PIN format is invalid in verifyPin", async () => {
+    (validatePinFormat as jest.Mock).mockReturnValueOnce(false);
+
+    const result = await useAuthStore.getState().verifyPin("abc");
+
+    expect(result.success).toBe(false);
+    expect(result.resiliency).toBeUndefined();
+  });
+
+  it("returns transient error when withPinOperationTimeout fails", async () => {
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        data: null,
+        error: "TIMEOUT",
+        isTransient: true,
+        retryable: true,
+      })
+    );
+
+    const result = await useAuthStore.getState().verifyPin("1234");
+
+    expect(result.success).toBe(false);
+    expect(result.resiliency).toBeDefined();
+    expect(result.resiliency?.error).toBe(
+      "Verification temporarily unavailable. Please try again."
+    );
+    expect(result.resiliency?.isTransient).toBeTruthy();
+  });
+
+  it("returns permanent error when withPinOperationTimeout fails with non-transient error", async () => {
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        data: null,
+        error: "VALIDATION_ERROR",
+        isTransient: false,
+        retryable: false,
+      })
+    );
+
+    const result = await useAuthStore.getState().verifyPin("1234");
+
+    expect(result.success).toBe(false);
+    expect(result.resiliency).toBeDefined();
+    expect(result.resiliency?.error).toBe(
+      "Verification failed. Please try again."
+    );
+  });
+
+  it("returns error on unexpected exception in verifyPin", async () => {
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.reject(new Error("Unexpected error"))
+    );
+
+    const result = await useAuthStore.getState().verifyPin("1234");
+
+    expect(result.success).toBe(false);
+    expect(result.resiliency).toBeDefined();
+    expect(result.resiliency?.error).toBe("An unexpected error occurred");
+  });
+
+  it("returns false when tryBiometric throws error", async () => {
+    useAuthStore.setState({ biometricAvailable: true, biometricEnabled: true });
+    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
+      Promise.reject(new Error("Biometric error"))
+    );
+
+    const ok = await useAuthStore.getState().tryBiometric();
+
+    expect(ok).toBe(false);
+  });
+
+  it("checks PIN lockout status", async () => {
+    (isLocked as jest.Mock).mockResolvedValueOnce(true);
+    (getLockoutRemainingMs as jest.Mock).mockResolvedValueOnce(15000);
+
+    await useAuthStore.getState().checkPinLockout();
+
+    const state = useAuthStore.getState();
+    expect(state.pinLocked).toBe(true);
+    expect(state.pinLockoutRemainingMs).toBe(15000);
   });
 });

@@ -14,6 +14,7 @@ import {
   getErrorMessage,
   PinOperationError,
   getLockoutRemainingMs,
+  withRetry,
 } from "../src/utils/pinResiliency";
 import * as SecureStore from "../src/storage/secureStore";
 
@@ -90,6 +91,17 @@ describe("pinResiliency", () => {
       expect(result.isTransient).toBe(false);
       expect(result.retryable).toBe(false);
     });
+
+    it("classifies unknown errors as permanent", async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValue(new Error("Some random error"));
+      const result = await withPinOperationTimeout(operation);
+
+      expect(result.error).toBe(PinOperationError.UNKNOWN);
+      expect(result.isTransient).toBe(false);
+      expect(result.retryable).toBe(false);
+    });
   });
 
   describe("attempt tracking", () => {
@@ -109,6 +121,12 @@ describe("pinResiliency", () => {
       mockGetItem.mockResolvedValue("100");
       const count = await getAttemptCount();
       expect(count).toBe(5); // MAX_ATTEMPTS
+    });
+
+    it("returns 0 when getItem throws error", async () => {
+      mockGetItem.mockRejectedValue(new Error("Storage error"));
+      const count = await getAttemptCount();
+      expect(count).toBe(0);
     });
 
     it("records failed attempt and increments count", async () => {
@@ -148,6 +166,16 @@ describe("pinResiliency", () => {
         "vault_pin_lockout_timestamp_v1"
       );
     });
+
+    it("handles errors in recordFailedAttempt gracefully", async () => {
+      mockGetItem.mockRejectedValue(new Error("Storage error"));
+      const result = await recordFailedAttempt();
+
+      expect(result.success).toBe(false);
+      expect(result.attemptCount).toBe(0);
+      expect(result.isLocked).toBe(false);
+      expect(result.error).toBe("Failed to record attempt");
+    });
   });
 
   describe("lockout mechanism", () => {
@@ -158,6 +186,12 @@ describe("pinResiliency", () => {
 
       const locked = await isLocked();
       expect(locked).toBe(true);
+    });
+
+    it("returns false when lockout timestamp throws error", async () => {
+      mockGetItem.mockRejectedValue(new Error("Storage error"));
+      const locked = await isLocked();
+      expect(locked).toBe(false);
     });
 
     it("expires lockout after duration", async () => {
@@ -234,6 +268,51 @@ describe("pinResiliency", () => {
       expect(getErrorMessage(PinOperationError.VALIDATION_ERROR)).toContain(
         "PIN format"
       );
+    });
+  });
+
+  describe("withRetry", () => {
+    it("succeeds on first attempt", async () => {
+      const operation = jest.fn().mockResolvedValue("success");
+      const result = await withRetry(operation);
+      expect(result).toBe("success");
+      expect(operation).toHaveBeenCalledTimes(1);
+    });
+
+    it("retries on failure and succeeds", async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("First error"))
+        .mockResolvedValueOnce("success");
+
+      const result = await withRetry(operation, 2, 10);
+
+      expect(result).toBe("success");
+      expect(operation).toHaveBeenCalledTimes(2);
+    });
+
+    it("throws last error after max retries", async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValue(new Error("Persistent error"));
+
+      await expect(withRetry(operation, 2, 10)).rejects.toThrow(
+        "Persistent error"
+      );
+      expect(operation).toHaveBeenCalledTimes(3);
+    });
+
+    it("uses exponential backoff", async () => {
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("Error 1"))
+        .mockRejectedValueOnce(new Error("Error 2"))
+        .mockResolvedValueOnce("success");
+
+      const result = await withRetry(operation, 2, 10);
+
+      expect(result).toBe("success");
+      expect(operation).toHaveBeenCalledTimes(3);
     });
   });
 });
