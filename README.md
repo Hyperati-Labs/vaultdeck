@@ -9,6 +9,7 @@ Minimal, offline-first vault for storing payment card details with biometric/PIN
 - PIN + biometric unlock (Face ID / Touch ID / Fingerprint)
 - Encrypted local vault (device keychain/keystore)
 - Encrypted backups with passphrase protection
+- PIN resiliency with automatic lockout after failed attempts
 - Auto-lock with configurable timeout
 - Clipboard auto-clear with customizable duration
 - Privacy shield when app backgrounded

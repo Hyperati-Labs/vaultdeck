@@ -32,7 +32,9 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Use `responsiveFontSize`, `responsiveSpacing`, and `Theme` tokens for all UI changes
 - All logic changes (crypto, storage, state, utils) should maintain high test coverage
 - Keep `package.json` version and `app.json` version in sync
+- **Keep `package-lock.json` in sync**: When modifying dependencies via `package.json`, always run `npm install` to update `package-lock.json` and commit both files together
 - **Update AGENTS.md when changing configuration**: If you modify `package.json`, `app.json`, CI workflows, or testing infrastructure, check if AGENTS.md needs corresponding updates to stay synchronized
+- **Version Bump Requires Deep Audit**: Before bumping version, manually audit all files changed since the last release using `git diff <last-tag>..HEAD`. Review each changed file to understand the features, fixes, and improvements. Document findings in CHANGELOG.md with clear descriptions of what changed and why. Update README.md and other docs to reflect new capabilities. Only then bump version in `package.json`, `app.json`, and update `package-lock.json` with `npm install`.
 
 ## Security Boundaries (Do Not Weaken)
 

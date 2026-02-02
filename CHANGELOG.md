@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2026-02-02
+
+### Added
+
+- PIN resiliency system with automatic lockout protection: tracks failed PIN attempts and enforces 60-second lockout after 5 consecutive failures.
+- Operation timeout handling for PIN operations with 10-second timeout and error classification (transient vs. permanent errors).
+- Attempt counter persistence in secure storage with automatic reset on successful authentication.
+
+### Improved
+
+- PIN entry flow with better error handling and user-friendly lockout messaging.
+- PIN settings UI to display lockout status and attempt tracking information.
+
 ## [1.2.4] - 2026-01-31
 
 ### Added
