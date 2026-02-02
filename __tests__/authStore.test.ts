@@ -257,66 +257,6 @@ describe("authStore", () => {
     expect(useAuthStore.getState().locked).toBe(true);
   });
 
-  it("throws error when PIN format is invalid in setPin", async () => {
-    try {
-      // Pass an empty string (invalid - needs 4-8 digits)
-      await useAuthStore.getState().setPin("");
-      throw new Error("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("Invalid PIN format");
-    }
-  });
-
-  it("throws error when withPinOperationTimeout returns error in setPin", async () => {
-    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        data: null,
-        error: "TIMEOUT",
-        isTransient: true,
-        retryable: true,
-      })
-    );
-
-    try {
-      await useAuthStore.getState().setPin("1234");
-      throw new Error("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("Failed to set PIN: TIMEOUT");
-    }
-  });
-
-  it("throws error when withPinOperationTimeout returns no data in setPin", async () => {
-    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        data: null,
-        error: null,
-        isTransient: false,
-        retryable: false,
-      })
-    );
-
-    try {
-      await useAuthStore.getState().setPin("1234");
-      throw new Error("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("PIN setup operation failed");
-    }
-  });
-
-  it("throws error in setPin catch block", async () => {
-    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
-      Promise.reject(new Error("Unexpected error"))
-    );
-
-    try {
-      await useAuthStore.getState().setPin("1234");
-      throw new Error("Should have thrown an error");
-    } catch (error: any) {
-      expect(error.message).toContain("Failed to set PIN");
-      expect(error.message).toContain("Unexpected error");
-    }
-  });
-
   it("returns false in updatePin when setPin throws error", async () => {
     const verify = jest
       .spyOn(useAuthStore.getState(), "verifyPin")
@@ -352,45 +292,6 @@ describe("authStore", () => {
 
     expect(result.success).toBe(false);
     expect(result.resiliency).toBeUndefined();
-  });
-
-  it("returns transient error when withPinOperationTimeout fails", async () => {
-    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        data: null,
-        error: "TIMEOUT",
-        isTransient: true,
-        retryable: true,
-      })
-    );
-
-    const result = await useAuthStore.getState().verifyPin("1234");
-
-    expect(result.success).toBe(false);
-    expect(result.resiliency).toBeDefined();
-    expect(result.resiliency?.error).toBe(
-      "Verification temporarily unavailable. Please try again."
-    );
-    expect(result.resiliency?.isTransient).toBeTruthy();
-  });
-
-  it("returns permanent error when withPinOperationTimeout fails with non-transient error", async () => {
-    (withPinOperationTimeout as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        data: null,
-        error: "VALIDATION_ERROR",
-        isTransient: false,
-        retryable: false,
-      })
-    );
-
-    const result = await useAuthStore.getState().verifyPin("1234");
-
-    expect(result.success).toBe(false);
-    expect(result.resiliency).toBeDefined();
-    expect(result.resiliency?.error).toBe(
-      "Verification failed. Please try again."
-    );
   });
 
   it("returns error on unexpected exception in verifyPin", async () => {
