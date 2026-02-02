@@ -15,6 +15,32 @@ jest.mock("expo-crypto", () => ({
   CryptoDigestAlgorithm: { SHA256: "sha256" },
 }));
 
+jest.mock("../src/utils/pinResiliency", () => ({
+  withPinOperationTimeout: jest.fn((operation) => {
+    return operation().then((data: any) => ({
+      data,
+      error: null,
+      isTransient: false,
+      retryable: false,
+    }));
+  }),
+  withRetry: jest.fn((operation) => {
+    return operation();
+  }),
+  validatePinFormat: jest.fn((pin) => /^\d{4,8}$/.test(pin)),
+  recordFailedAttempt: jest.fn(() =>
+    Promise.resolve({
+      success: false,
+      attemptCount: 1,
+      isLocked: false,
+      lockoutRemainingMs: 0,
+    })
+  ),
+  resetAttemptCount: jest.fn(() => Promise.resolve()),
+  isLocked: jest.fn(() => Promise.resolve(false)),
+  getLockoutRemainingMs: jest.fn(() => Promise.resolve(0)),
+}));
+
 import * as Crypto from "expo-crypto";
 import * as LocalAuthentication from "expo-local-authentication";
 import { getItem, setItem } from "../src/storage/secureStore";
@@ -113,23 +139,23 @@ describe("authStore", () => {
     expect(useAuthStore.getState().hasPin).toBe(true);
     expect(useAuthStore.getState().pinLength).toBe(4);
 
-    const ok = await useAuthStore.getState().verifyPin("1234");
-    expect(ok).toBe(true);
+    const result = await useAuthStore.getState().verifyPin("1234");
+    expect(result.success).toBe(true);
   });
 
   it("returns false when no stored pin", async () => {
     (getItem as jest.Mock)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
-    const ok = await useAuthStore.getState().verifyPin("1234");
-    expect(ok).toBe(false);
+    const result = await useAuthStore.getState().verifyPin("1234");
+    expect(result.success).toBe(false);
   });
 
   it("updates pin only when current pin matches", async () => {
     const verify = jest
       .spyOn(useAuthStore.getState(), "verifyPin")
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(true);
+      .mockResolvedValueOnce({ success: false })
+      .mockResolvedValueOnce({ success: true });
     const setPin = jest
       .spyOn(useAuthStore.getState(), "setPin")
       .mockResolvedValue();
