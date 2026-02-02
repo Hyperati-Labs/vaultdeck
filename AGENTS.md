@@ -32,6 +32,7 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Use `responsiveFontSize`, `responsiveSpacing`, and `Theme` tokens for all UI changes
 - All logic changes (crypto, storage, state, utils) should maintain high test coverage
 - Keep `package.json` version and `app.json` version in sync
+- **Update AGENTS.md when changing configuration**: If you modify `package.json`, `app.json`, CI workflows, or testing infrastructure, check if AGENTS.md needs corresponding updates to stay synchronized
 
 ## Security Boundaries (Do Not Weaken)
 
@@ -153,6 +154,7 @@ Cards are sorted by: (1) favorites first, (2) alphabetically by nickname.
 
 - Ask for clarification on any data-handling or security-sensitive change
 - Keep changes minimal and reversible
+- Check if documentation (AGENTS.md, README.md) needs updates when changing behavior or configuration
 
 ## Release Discipline
 
