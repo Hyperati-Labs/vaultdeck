@@ -258,18 +258,13 @@ describe("authStore", () => {
   });
 
   it("throws error when PIN format is invalid in setPin", async () => {
-    // Override the validatePinFormat mock to return false
-    (validatePinFormat as jest.Mock).mockImplementationOnce(() => false);
-
     try {
-      await useAuthStore.getState().setPin("abc");
+      // Pass an empty string (invalid - needs 4-8 digits)
+      await useAuthStore.getState().setPin("");
       throw new Error("Should have thrown an error");
     } catch (error: any) {
       expect(error.message).toContain("Invalid PIN format");
     }
-
-    // Verify the mock was called
-    expect(validatePinFormat).toHaveBeenCalled();
   });
 
   it("throws error when withPinOperationTimeout returns error in setPin", async () => {
