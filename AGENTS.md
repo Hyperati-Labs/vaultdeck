@@ -86,7 +86,9 @@ Quality checks run automatically on PRs and pushes to main via GitHub Actions:
 - Update/add tests in `__tests__/` when changing storage, crypto, or auth flows
 - Update/add tests in `__tests__/` when changing backup behavior, PIN resiliency, or secure store behavior
 - Run `npm run test` for logic changes; `npm run check` for broader changes
-- Coverage threshold is configured at 100% in `package.json`; aim to maintain this
+- Coverage thresholds in `package.json`: 95% branches, 99% lines/statements, 100% functions
+- Uncovered code consists of defensive error handlers (timeout conditions, storage failures in nested try-catch blocks)
+- Aim to maintain or improve these thresholds; avoid adding untested code paths
 
 ## Backup Format Notes
 
