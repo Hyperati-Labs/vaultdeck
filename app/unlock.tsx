@@ -24,6 +24,9 @@ export default function UnlockScreen() {
     verifyPin,
     unlock,
     initialized,
+    pinLocked,
+    pinLockoutRemainingMs,
+    checkPinLockout,
   } = useAuthStore();
   const [pin, setPinValue] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -31,10 +34,44 @@ export default function UnlockScreen() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [appState, setAppState] = useState(AppState.currentState);
+  const [lockoutTimer, setLockoutTimer] = useState(0);
   const isVerifying = useRef(false);
   const lastAttemptRef = useRef<string | null>(null);
   const isMounted = useRef(true);
   const autoBiometricAttempted = useRef(false);
+
+  // Refresh lockout status when screen mounts or app returns to foreground
+  useEffect(() => {
+    if (!initialized || !locked) {
+      return;
+    }
+    checkPinLockout();
+  }, [initialized, locked, appState, checkPinLockout]);
+
+  // Lockout timer effect
+  useEffect(() => {
+    if (lockoutTimer <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutTimer((prev) => {
+        const next = prev - 1;
+        if (next <= 0) {
+          checkPinLockout();
+        }
+        return Math.max(0, next);
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutTimer, checkPinLockout]);
+
+  // Update lockout timer when lockout changes
+  useEffect(() => {
+    if (pinLocked) {
+      setLockoutTimer(Math.ceil(pinLockoutRemainingMs / 1000));
+    } else {
+      setLockoutTimer(0);
+      setError("");
+    }
+  }, [pinLocked, pinLockoutRemainingMs]);
 
   useEffect(() => {
     isMounted.current = true;
@@ -127,6 +164,10 @@ export default function UnlockScreen() {
           if (isMounted.current) {
             unlock();
           }
+        } catch (err) {
+          if (isMounted.current) {
+            setError(String(err).replace("Error: ", ""));
+          }
         } finally {
           isVerifying.current = false;
           if (isMounted.current) {
@@ -152,12 +193,22 @@ export default function UnlockScreen() {
       setBusy(true);
       isVerifying.current = true;
       try {
-        const ok = await verifyPin(pin);
-        if (!ok) {
+        const result = await verifyPin(pin);
+        if (!result.success) {
           if (pin.length >= PIN_LENGTH) {
-            setError("Incorrect PIN.");
+            // Use resiliency error if available
+            if (result.resiliency?.error) {
+              setError(result.resiliency.error);
+              if (result.resiliency.isLocked) {
+                setLockoutTimer(
+                  Math.ceil(result.resiliency.lockoutRemainingMs / 1000)
+                );
+              }
+            } else {
+              setError("Incorrect PIN.");
+            }
             setPinValue("");
-            lastAttemptRef.current = null;
+            lastAttemptRef.current = ""; // Reset to empty string instead of null
           }
           return;
         }
@@ -190,7 +241,7 @@ export default function UnlockScreen() {
   ]);
 
   const handleDigit = (digit: number) => {
-    if (busy) {
+    if (busy || pinLocked) {
       return;
     }
     setError("");
@@ -213,7 +264,7 @@ export default function UnlockScreen() {
   };
 
   const handleBackspace = () => {
-    if (busy) {
+    if (busy || pinLocked) {
       return;
     }
     if (isSetup && activeField === "confirm") {
@@ -280,7 +331,20 @@ export default function UnlockScreen() {
               );
             })}
           </View>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <View style={styles.errorContainer}>
+            <Text
+              style={[
+                styles.error,
+                !pinLocked && !error ? styles.errorHidden : null,
+              ]}
+            >
+              {pinLocked
+                ? `Too many attempts. Try again in ${String(
+                    Math.max(0, lockoutTimer)
+                  ).padStart(2, "0")}s.`
+                : error || " "}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.keypad}>
@@ -438,11 +502,20 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
     pinDotFilled: {
       backgroundColor: theme.colors.ink,
     },
+    errorContainer: {
+      minHeight: responsiveSpacing(20),
+      justifyContent: "center",
+    },
     error: {
       color: theme.colors.danger,
       fontFamily: theme.font.regular,
       fontSize: responsiveFontSize(14),
       marginTop: theme.spacing.sm,
+      textAlign: "center",
+      fontVariant: ["tabular-nums"],
+    },
+    errorHidden: {
+      opacity: 0,
     },
     keypad: {
       marginTop: theme.spacing.xl,

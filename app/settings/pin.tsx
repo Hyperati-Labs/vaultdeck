@@ -61,8 +61,8 @@ export default function ChangePinScreen() {
         setBusy(true);
         isVerifying.current = true;
         try {
-          const ok = await verifyPin(currentPin);
-          if (ok) {
+          const result = await verifyPin(currentPin);
+          if (result.success) {
             setStep("next");
             setError("");
           } else {
@@ -104,6 +104,12 @@ export default function ChangePinScreen() {
                 setNextPin("");
                 setConfirmPin("");
               }
+            } catch (err) {
+              setError(String(err).replace("Error: ", ""));
+              setStep("current");
+              setCurrentPin("");
+              setNextPin("");
+              setConfirmPin("");
             } finally {
               isVerifying.current = false;
               if (isMounted.current) setBusy(false);
