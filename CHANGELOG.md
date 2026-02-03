@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.6] - 2026-02-02
+
+### Added
+
+- Multi-selection mode with bulk operations for cards (delete, duplicate, favorite).
+- Animated search bar integrated into header.
+
+### Improved
+
+- Biometric authentication now respects PIN lockout to prevent security bypass.
+- Card list UI refactored with modern multi-selection interface.
+
 ## [1.2.5] - 2026-02-02
 
 ### Added

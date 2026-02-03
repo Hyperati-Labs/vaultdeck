@@ -34,7 +34,24 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Keep `package.json` version and `app.json` version in sync
 - **Keep `package-lock.json` in sync**: When modifying dependencies via `package.json`, always run `npm install` to update `package-lock.json` and commit both files together
 - **Update AGENTS.md when changing configuration**: If you modify `package.json`, `app.json`, CI workflows, or testing infrastructure, check if AGENTS.md needs corresponding updates to stay synchronized
-- **Version Bump Requires Deep Audit**: Before bumping version, manually audit all files changed since the last release using `git diff <last-tag>..HEAD`. Review each changed file to understand the features, fixes, and improvements. Document findings in CHANGELOG.md with clear descriptions of what changed and why. Update README.md and other docs to reflect new capabilities. Only then bump version in `package.json`, `app.json`, and update `package-lock.json` with `npm install`.
+- **MANDATORY: Version Bump Requires Deep Audit**: **NEVER bump version numbers without completing a comprehensive audit first.** This is a strict requirement, not optional. The audit process must be completed in this exact order:
+  1. **Identify last release tag**: Run `git tag --sort=-version:refname | head -1` to find the latest tag (e.g., `v1.2.5`)
+  2. **List all changed files**: Run `git diff <last-tag>..HEAD --name-status` to see all modified, added, and deleted files
+  3. **Review full diff**: Run `git diff <last-tag>..HEAD` and carefully examine every change in every file
+  4. **Categorize changes**: For each changed file, identify:
+     - New features added
+     - Bug fixes implemented
+     - Security enhancements
+     - UI/UX improvements
+     - Performance optimizations
+     - Test coverage additions
+     - Breaking changes (if any)
+     - Dependencies added/removed/updated
+  5. **Document in CHANGELOG.md**: Write minimal, concise changelog entries organized by category (Added, Changed, Fixed, Improved, Removed). Focus on user-visible changes and key improvements. Keep descriptions brief and avoid implementation details.
+  6. **Update documentation**: Review and update README.md and other relevant docs if new features or capabilities were added
+  7. **Only then bump version**: After completing steps 1-6, update version in `package.json`, `app.json` (including `buildNumber` and `versionCode`), and run `npm install` to update `package-lock.json`
+
+  **Failure to complete this audit process before version bump is a violation of release discipline.**
 
 ## Security Boundaries (Do Not Weaken)
 
@@ -125,6 +142,7 @@ Card type fields:
 - `notes` - **Sensitive** - User notes
 - `tags` - Array of tag strings
 - `favorite` - Boolean for favorites feature
+- `isCopy` - Boolean indicating if card was duplicated (shows copy icon in UI)
 - `createdAt` - ISO timestamp
 - `updatedAt` - ISO timestamp
 
