@@ -16,6 +16,9 @@ jest.mock("expo-crypto", () => ({
 }));
 
 jest.mock("../src/utils/pinResiliency", () => {
+  const { PinOperationError } = jest.requireActual(
+    "../src/utils/pinResiliency"
+  );
   const actualModule = {
     withPinOperationTimeout: jest.fn(),
     withRetry: jest.fn(),
@@ -24,6 +27,7 @@ jest.mock("../src/utils/pinResiliency", () => {
     resetAttemptCount: jest.fn(),
     isLocked: jest.fn(),
     getLockoutRemainingMs: jest.fn(),
+    PinOperationError,
   };
 
   // Set default implementations
@@ -64,6 +68,7 @@ import {
   resetAttemptCount,
   isLocked,
   getLockoutRemainingMs,
+  PinOperationError,
 } from "../src/utils/pinResiliency";
 
 describe("authStore", () => {
@@ -186,6 +191,40 @@ describe("authStore", () => {
     expect(result.success).toBe(true);
   });
 
+  it("throws when setting invalid pin format", async () => {
+    (validatePinFormat as jest.Mock).mockReturnValueOnce(false);
+
+    await expect(useAuthStore.getState().setPin("12")).rejects.toThrow(
+      "Invalid PIN format"
+    );
+  });
+
+  it("throws when setPin operation returns error", async () => {
+    (withPinOperationTimeout as jest.Mock).mockResolvedValueOnce({
+      data: null,
+      error: PinOperationError.TIMEOUT,
+      isTransient: true,
+      retryable: true,
+    });
+
+    await expect(useAuthStore.getState().setPin("1234")).rejects.toThrow(
+      "Failed to set PIN: TIMEOUT"
+    );
+  });
+
+  it("throws when setPin operation returns no data", async () => {
+    (withPinOperationTimeout as jest.Mock).mockResolvedValueOnce({
+      data: null,
+      error: null,
+      isTransient: false,
+      retryable: false,
+    });
+
+    await expect(useAuthStore.getState().setPin("1234")).rejects.toThrow(
+      "PIN setup operation failed"
+    );
+  });
+
   it("returns false when no stored pin", async () => {
     (getItem as jest.Mock)
       .mockResolvedValueOnce(null)
@@ -285,6 +324,21 @@ describe("authStore", () => {
     expect(useAuthStore.getState().pinLockoutRemainingMs).toBe(30000);
   });
 
+  it("returns resiliency error when verification has transient error", async () => {
+    (withPinOperationTimeout as jest.Mock).mockResolvedValueOnce({
+      data: null,
+      error: PinOperationError.TIMEOUT,
+      isTransient: true,
+      retryable: true,
+    });
+
+    const result = await useAuthStore.getState().verifyPin("1234");
+
+    expect(result.success).toBe(false);
+    expect(result.resiliency?.error).toContain("temporarily unavailable");
+    expect(result.resiliency?.isLocked).toBe(false);
+  });
+
   it("returns false when PIN format is invalid in verifyPin", async () => {
     (validatePinFormat as jest.Mock).mockReturnValueOnce(false);
 
@@ -317,14 +371,34 @@ describe("authStore", () => {
     expect(ok).toBe(false);
   });
 
+  it("blocks biometric when PIN lockout is active", async () => {
+    useAuthStore.setState({ biometricAvailable: true, biometricEnabled: true });
+    (isLocked as jest.Mock).mockResolvedValueOnce(true);
+    (getLockoutRemainingMs as jest.Mock).mockResolvedValueOnce(45000);
+
+    const ok = await useAuthStore.getState().tryBiometric();
+
+    expect(ok).toBe(false);
+    expect(useAuthStore.getState().pinLocked).toBe(true);
+    expect(useAuthStore.getState().pinLockoutRemainingMs).toBe(45000);
+    expect(LocalAuthentication.authenticateAsync).not.toHaveBeenCalled();
+  });
+
   it("checks PIN lockout status", async () => {
     (isLocked as jest.Mock).mockResolvedValueOnce(true);
     (getLockoutRemainingMs as jest.Mock).mockResolvedValueOnce(15000);
 
     await useAuthStore.getState().checkPinLockout();
 
-    const state = useAuthStore.getState();
+    let state = useAuthStore.getState();
     expect(state.pinLocked).toBe(true);
     expect(state.pinLockoutRemainingMs).toBe(15000);
+
+    // Also check the case when not locked
+    (isLocked as jest.Mock).mockResolvedValueOnce(false);
+    await useAuthStore.getState().checkPinLockout();
+    state = useAuthStore.getState();
+    expect(state.pinLocked).toBe(false);
+    expect(state.pinLockoutRemainingMs).toBe(0);
   });
 });

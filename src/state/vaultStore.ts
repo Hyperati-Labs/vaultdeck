@@ -13,6 +13,7 @@ import {
   vaultBlobExists,
   writeVaultData,
 } from "../storage/vaultStorage";
+import { generateId } from "../utils/id";
 
 type VaultError = "missing_key" | "corrupt" | "unknown";
 
@@ -23,6 +24,9 @@ type VaultState = {
   loadVault: () => Promise<void>;
   upsertCard: (card: Card) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
+  deleteCards: (cardIds: string[]) => Promise<void>;
+  duplicateCards: (cardIds: string[]) => Promise<void>;
+  toggleFavoriteCards: (cardIds: string[]) => Promise<void>;
   setTagColor: (tag: string, color?: string) => Promise<void>;
   renameTag: (from: string, to: string) => Promise<void>;
   deleteTag: (tag: string) => Promise<void>;
@@ -101,12 +105,14 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     if (!vault) {
       return;
     }
-    const existingIndex = vault.cards.findIndex((item) => item.id === card.id);
+    const cardIndex = vault.cards.findIndex((c) => c.id === card.id);
     const updatedAt = nowIso();
     let cards: Card[];
-    if (existingIndex >= 0) {
-      const updated = { ...card, updatedAt };
-      cards = vault.cards.map((item) => (item.id === card.id ? updated : item));
+    if (cardIndex >= 0) {
+      const updatedCard = { ...card, isCopy: false, updatedAt };
+      cards = vault.cards.map((item) =>
+        item.id === card.id ? updatedCard : item
+      );
     } else {
       const created = { ...card, createdAt: updatedAt, updatedAt };
       cards = [...vault.cards, created];
@@ -124,6 +130,74 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       return;
     }
     const cards = vault.cards.filter((item) => item.id !== cardId);
+
+    cards.sort(compareCards);
+
+    const next: VaultData = { ...vault, cards, updatedAt: nowIso() };
+    await writeVaultData(next);
+    set({ vault: next });
+  },
+  deleteCards: async (cardIds) => {
+    const { vault } = get();
+    if (!vault) {
+      return;
+    }
+    const idsSet = new Set(cardIds);
+    const cards = vault.cards.filter((item) => !idsSet.has(item.id));
+
+    cards.sort(compareCards);
+
+    const next: VaultData = { ...vault, cards, updatedAt: nowIso() };
+    await writeVaultData(next);
+    set({ vault: next });
+  },
+  duplicateCards: async (cardIds) => {
+    const { vault } = get();
+    if (!vault) {
+      return;
+    }
+    const idsSet = new Set(cardIds);
+    const cardsToDuplicate = vault.cards.filter((c) => idsSet.has(c.id));
+
+    const now = nowIso();
+    const newCardsPromises = cardsToDuplicate.map(async (card) => {
+      const { id, createdAt, updatedAt, ...rest } = card;
+      const newId = await generateId();
+      return {
+        ...rest,
+        id: newId,
+        nickname: card.nickname,
+        isCopy: true,
+        createdAt: now,
+        updatedAt: now,
+      };
+    });
+
+    const newCards = await Promise.all(newCardsPromises);
+    const cards = [...vault.cards, ...newCards];
+    cards.sort(compareCards);
+
+    const next: VaultData = { ...vault, cards, updatedAt: now };
+    await writeVaultData(next);
+    set({ vault: next });
+  },
+  toggleFavoriteCards: async (cardIds) => {
+    const { vault } = get();
+    if (!vault) {
+      return;
+    }
+    const idsSet = new Set(cardIds);
+    // Determine if we should favorite or unfavorite (if any in selection are not favorites, favorite all)
+    const selectedCards = vault.cards.filter((c) => idsSet.has(c.id));
+    const allFavorite = selectedCards.every((c) => c.favorite);
+    const nextFavorite = !allFavorite;
+
+    const cards = vault.cards.map((item) => {
+      if (idsSet.has(item.id)) {
+        return { ...item, favorite: nextFavorite, updatedAt: nowIso() };
+      }
+      return item;
+    });
 
     cards.sort(compareCards);
 

@@ -39,7 +39,7 @@ export default function VirtualCard({
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const { width: cardWidth, height: cardHeight } = useMemo(
-    () => getCardDimensions(),
+    () => getCardDimensions(windowWidth),
     [windowWidth]
   );
   const styles = getStyles(theme, cardWidth, cardHeight);

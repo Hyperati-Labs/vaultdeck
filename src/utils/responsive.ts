@@ -94,9 +94,8 @@ export const isLargeDevice = (): boolean => {
 const CARD_ASPECT_RATIO = 1.586;
 const MAX_CARD_WIDTH = 420;
 
-export const getCardDimensions = () => {
+export const getCardDimensions = (screenWidth: number = getScreenWidth()) => {
   const horizontalPadding = 40;
-  const screenWidth = getScreenWidth();
   const cardWidth = Math.min(screenWidth - horizontalPadding, MAX_CARD_WIDTH);
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
 

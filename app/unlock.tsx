@@ -103,11 +103,20 @@ export default function UnlockScreen() {
     if (!locked) {
       return;
     }
+    if (pinLocked) {
+      return;
+    }
     if (autoBiometricAttempted.current) {
       return;
     }
     const attemptBiometric = async () => {
-      if (!hasPin || !biometricAvailable || !biometricEnabled || busy) {
+      if (
+        !hasPin ||
+        !biometricAvailable ||
+        !biometricEnabled ||
+        busy ||
+        pinLocked
+      ) {
         return;
       }
       autoBiometricAttempted.current = true;
@@ -134,6 +143,7 @@ export default function UnlockScreen() {
     initialized,
     appState,
     locked,
+    pinLocked,
     tryBiometric,
     unlock,
   ]);
@@ -275,7 +285,13 @@ export default function UnlockScreen() {
   };
 
   const handleBiometric = async () => {
-    if (!hasPin || !biometricAvailable || !biometricEnabled || busy) {
+    if (
+      !hasPin ||
+      !biometricAvailable ||
+      !biometricEnabled ||
+      busy ||
+      pinLocked
+    ) {
       return;
     }
     setError("");
@@ -394,7 +410,7 @@ export default function UnlockScreen() {
             ))}
           </View>
           <View style={styles.keypadRow}>
-            {biometricAvailable && hasPin && biometricEnabled ? (
+            {biometricAvailable && hasPin && biometricEnabled && !pinLocked ? (
               <Pressable
                 style={({ pressed }) => [
                   styles.keypadButton,

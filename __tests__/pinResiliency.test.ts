@@ -6,6 +6,7 @@ jest.mock("../src/storage/secureStore", () => ({
 
 import {
   withPinOperationTimeout,
+  getLockoutTimestamp,
   getAttemptCount,
   isLocked,
   recordFailedAttempt,
@@ -179,6 +180,16 @@ describe("pinResiliency", () => {
   });
 
   describe("lockout mechanism", () => {
+    it("returns false when no lockout timestamp", async () => {
+      mockGetItem.mockResolvedValueOnce(null);
+
+      const timestamp = await getLockoutTimestamp();
+      const locked = await isLocked();
+
+      expect(timestamp).toBeNull();
+      expect(locked).toBe(false);
+    });
+
     it("determines lockout status", async () => {
       const now = Date.now();
       const lockoutTime = now - 30000; // 30 seconds ago
@@ -313,6 +324,24 @@ describe("pinResiliency", () => {
 
       expect(result).toBe("success");
       expect(operation).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe("Edge Cases for Coverage", () => {
+    it("isLocked handles cleanup failures when lockout expires", async () => {
+      const expiredTime = Date.now() - 100000;
+      mockGetItem.mockResolvedValue(String(expiredTime));
+      mockDeleteItem.mockRejectedValue(new Error("Disk error"));
+
+      const locked = await isLocked();
+      expect(locked).toBe(false);
+      expect(mockDeleteItem).toHaveBeenCalled();
+    });
+
+    it("getLockoutRemainingMs returns 0 if no timestamp", async () => {
+      mockGetItem.mockResolvedValue(null);
+      const remaining = await getLockoutRemainingMs();
+      expect(remaining).toBe(0);
     });
   });
 });

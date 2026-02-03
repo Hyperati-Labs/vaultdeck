@@ -10,6 +10,7 @@ export type Card = {
   notes?: string;
   tags: string[];
   favorite?: boolean;
+  isCopy?: boolean;
   createdAt: string;
   updatedAt: string;
 };

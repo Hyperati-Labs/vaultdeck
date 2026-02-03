@@ -220,7 +220,7 @@ export async function recordFailedAttempt(): Promise<PinResiliencyResult> {
       lockoutRemainingMs: 0,
       error: `Incorrect PIN. ${MAX_ATTEMPTS - newCount} attempt${MAX_ATTEMPTS - newCount === 1 ? "" : "s"} remaining.`,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       attemptCount: 0,

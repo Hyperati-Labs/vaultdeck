@@ -6,28 +6,24 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
-  Dimensions,
   ScrollView,
+  Animated,
+  BackHandler,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { BlurView } from "expo-blur";
-
-import GlassPanel from "../src/components/GlassPanel";
-import Screen from "../src/components/Screen";
 import { useVaultStore } from "../src/state/vaultStore";
-import { displayCardNumber } from "../src/utils/cardFormat";
-import CardBrandIcon from "../src/components/CardBrandIcon";
-import { detectCardType } from "../src/utils/cardType";
+import Screen from "../src/components/Screen";
 import { useTheme } from "../src/utils/useTheme";
-import { generateId } from "../src/utils/id";
 import { Card } from "../src/types/vault";
 import { useHaptics } from "../src/utils/useHaptics";
 import { getTagColor } from "../src/utils/tagColors";
 import { responsiveFontSize, responsiveSpacing } from "../src/utils/responsive";
+import CardItem from "../src/components/CardItem";
+import SelectionToolbar from "../src/components/SelectionToolbar";
+import SearchBar from "../src/components/SearchBar";
 
 export default function Index() {
   const theme = useTheme();
@@ -39,7 +35,9 @@ export default function Index() {
     error,
     resetVault,
     upsertCard,
-    deleteCard,
+    deleteCards,
+    duplicateCards,
+    toggleFavoriteCards,
   } = useVaultStore();
   const listRef = useRef<FlatList<Card>>(null);
   const snackbarTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,17 +47,24 @@ export default function Index() {
   const [query, setQuery] = useState("");
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [longPressedCard, setLongPressedCard] = useState<Card | null>(null);
-  const [pressedPosition, setPressedPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-  const cardRefs = useRef<Record<string, View | null>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const headerAnim = useRef(new Animated.Value(0)).current;
+
+  const selectionMode = selectedIds.size > 0;
+
   const router = useRouter();
-  const screenHeight = Dimensions.get("window").height;
   const { impact, notify } = useHaptics();
+
+  useEffect(() => {
+    Animated.spring(headerAnim, {
+      toValue: searchFocused ? 1 : 0,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 50,
+    }).start();
+  }, [searchFocused, headerAnim]);
 
   useEffect(() => {
     if (!vault && !loading && !error) {
@@ -74,6 +79,28 @@ export default function Index() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const handleBackPress = () => {
+      if (searchFocused) {
+        setSearchFocused(false);
+        setQuery("");
+        return true;
+      }
+      if (selectionMode) {
+        setSelectedIds(new Set());
+        return true;
+      }
+      return false;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      handleBackPress
+    );
+
+    return () => backHandler.remove();
+  }, [searchFocused, selectionMode]);
 
   const filtered = useMemo(() => {
     if (!vault) {
@@ -97,66 +124,57 @@ export default function Index() {
     });
   }, [query, tagFilters, vault]);
 
-  const handleLongPress = (card: Card, ref: View | null) => {
-    if (!ref) return;
-
+  const handleLongPress = (card: Card) => {
     impact(Haptics.ImpactFeedbackStyle.Medium);
+    toggleSelection(card.id);
+  };
 
-    (ref as any).measure(
-      (
-        x: number,
-        y: number,
-        width: number,
-        height: number,
-        pageX: number,
-        pageY: number
-      ) => {
-        setPressedPosition({ x: pageX, y: pageY, width, height });
-        setLongPressedCard(card);
+  const toggleSelection = (id: string) => {
+    impact(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
       }
-    );
-  };
-
-  const handleDuplicate = async () => {
-    if (!longPressedCard) return;
-    const newId = await generateId();
-    const { id, createdAt, updatedAt, ...rest } = longPressedCard;
-    await upsertCard({
-      ...rest,
-      id: newId,
-      nickname: `${rest.nickname} (Copy)`,
-      createdAt: "",
-      updatedAt: "",
+      return next;
     });
-    setLongPressedCard(null);
-    notify(Haptics.NotificationFeedbackType.Success);
   };
 
-  const handleEdit = () => {
-    if (!longPressedCard) return;
-    const id = longPressedCard.id;
-    setLongPressedCard(null);
-    router.push(`/card/edit/${id}`);
+  const clearSelection = () => {
+    setSelectedIds(new Set());
   };
 
-  const handleDelete = async () => {
-    if (!longPressedCard) return;
-    await deleteCard(longPressedCard.id);
-    setLongPressedCard(null);
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    setDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    setDeleteOpen(false);
+    const count = selectedIds.size;
+    await deleteCards(Array.from(selectedIds));
+    clearSelection();
+    showSnackbar(`Deleted ${count} cards`);
     notify(Haptics.NotificationFeedbackType.Warning);
   };
 
-  const handleToggleFavorite = async () => {
-    if (!longPressedCard) return;
-    const nextFavorite = !Boolean(longPressedCard.favorite);
-    await upsertCard({
-      ...longPressedCard,
-      favorite: nextFavorite,
-    });
-    showSnackbar(
-      nextFavorite ? "Moved to favorites" : "Removed from favorites"
-    );
-    setLongPressedCard(null);
+  const handleBulkDuplicate = async () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    await duplicateCards(Array.from(selectedIds));
+    clearSelection();
+    showSnackbar(`Duplicated ${count} card${count > 1 ? "s" : ""}`);
+    notify(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const handleBulkFavorite = async () => {
+    if (selectedIds.size === 0) return;
+    await toggleFavoriteCards(Array.from(selectedIds));
+    const count = selectedIds.size;
+    clearSelection();
+    showSnackbar(`Updated ${count} cards`);
     notify(Haptics.NotificationFeedbackType.Success);
   };
   const availableTags = useMemo(() => {
@@ -216,23 +234,59 @@ export default function Index() {
     );
   }
 
+  const headerOpacity = headerAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 0],
+  });
+
+  const headerTranslateX = headerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -20],
+  });
+
   return (
     <Screen>
-      {!searchFocused ? (
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.kicker}>Personal vault</Text>
-            <Text style={styles.title}>VaultDeck</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              accessibilityLabel="Search"
-              onPress={() => setSearchFocused(true)}
-              activeOpacity={0.6}
-            >
-              <Ionicons name="search" size={20} color={theme.colors.ink} />
-            </TouchableOpacity>
+      <View style={styles.header}>
+        <Animated.View
+          style={[
+            styles.headerTitleContainer,
+            {
+              opacity: headerOpacity,
+              transform: [{ translateX: headerTranslateX }],
+            },
+          ]}
+          pointerEvents={searchFocused ? "none" : "auto"}
+        >
+          <Text style={styles.kicker} numberOfLines={1}>
+            Personal vault
+          </Text>
+          <Text
+            style={styles.title}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >
+            VaultDeck
+          </Text>
+        </Animated.View>
+
+        <View style={styles.headerActions}>
+          <SearchBar
+            value={query}
+            onChangeText={setQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => {}}
+            onCancel={() => {
+              setSearchFocused(false);
+              setQuery("");
+            }}
+            isFocused={searchFocused}
+          />
+
+          <Animated.View
+            style={[styles.headerActionsFade, { opacity: headerOpacity }]}
+            pointerEvents={searchFocused ? "none" : "auto"}
+          >
             <Link href="/settings" asChild>
               <TouchableOpacity
                 style={styles.iconButton}
@@ -254,37 +308,12 @@ export default function Index() {
                 <Ionicons name="add" size={24} color={theme.colors.accent} />
               </TouchableOpacity>
             </Link>
-          </View>
+          </Animated.View>
         </View>
-      ) : null}
-
-      {searchFocused ? (
-        <GlassPanel style={styles.searchFull}>
-          <View style={styles.searchFullRow}>
-            <Ionicons name="search" size={18} color={theme.colors.muted} />
-            <TextInput
-              placeholder="Search cards, issuer, holder"
-              placeholderTextColor={theme.colors.muted}
-              value={query}
-              onChangeText={setQuery}
-              autoFocus
-              style={styles.searchFullInput}
-            />
-            <TouchableOpacity
-              accessibilityLabel="Close search"
-              onPress={() => setSearchFocused(false)}
-              activeOpacity={0.6}
-            >
-              <Ionicons name="close" size={18} color={theme.colors.ink} />
-            </TouchableOpacity>
-          </View>
-        </GlassPanel>
-      ) : null}
+      </View>
 
       {availableTags.length ? (
-        <View
-          style={[styles.quickFilters, searchFocused && styles.filtersHidden]}
-        >
+        <View style={[styles.quickFilters, searchFocused && { opacity: 0 }]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -360,7 +389,10 @@ export default function Index() {
         ref={listRef}
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[
+          styles.list,
+          selectionMode && { paddingBottom: responsiveSpacing(120) },
+        ]}
         showsVerticalScrollIndicator={false}
         bounces={true}
         overScrollMode="always"
@@ -369,263 +401,93 @@ export default function Index() {
         maxToRenderPerBatch={10}
         windowSize={10}
         removeClippedSubviews={true}
-        ListEmptyComponent={<Text style={styles.empty}>No cards yet.</Text>}
-        renderItem={({ item }) => {
-          const cardType = item.cardNumber
-            ? detectCardType(item.cardNumber)
-            : "unknown";
-          const cardTypeLabel =
-            cardType === "visa"
-              ? "Visa"
-              : cardType === "mastercard"
-                ? "Mastercard"
-                : cardType === "amex"
-                  ? "AMEX"
-                  : cardType === "discover"
-                    ? "Discover"
-                    : "Card";
-
-          return (
-            <TouchableOpacity
-              ref={(ref) => {
-                cardRefs.current[item.id] = ref;
-              }}
-              style={styles.cardRow}
-              onPress={() => router.push(`/card/${item.id}`)}
-              onLongPress={() =>
-                handleLongPress(item, cardRefs.current[item.id])
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name={query ? "search-outline" : "card-outline"}
+              size={64}
+              color={theme.colors.outline}
+            />
+            <Text style={styles.emptyTitle}>
+              {query ? "No results found" : "No cards yet"}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {query
+                ? `We couldn't find any matches for "${query}"`
+                : "Add your first card to get started with your vault."}
+            </Text>
+            {query && (
+              <TouchableOpacity
+                style={styles.clearSearchButton}
+                onPress={() => setQuery("")}
+              >
+                <Text style={styles.clearSearchText}>Clear Search</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <CardItem
+            item={item}
+            selectionMode={selectionMode}
+            selected={selectedIds.has(item.id)}
+            onPress={(card) => {
+              if (selectionMode) {
+                toggleSelection(card.id);
+              } else {
+                router.push(`/card/${card.id}`);
               }
-              delayLongPress={300}
-              activeOpacity={0.7}
-            >
-              <GlassPanel style={styles.cardGlass}>
-                <View style={styles.cardRowHeader}>
-                  <Text
-                    style={styles.cardTitle}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item.nickname || "Untitled card"}
-                  </Text>
-                  <Pressable
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      const nextFavorite = !item.favorite;
-                      impact(Haptics.ImpactFeedbackStyle.Light);
-                      upsertCard({ ...item, favorite: nextFavorite });
-                      showSnackbar(
-                        nextFavorite
-                          ? "Moved to favorites"
-                          : "Removed from favorites"
-                      );
-                    }}
-                    hitSlop={12}
-                    style={styles.cardTagRow}
-                    accessibilityLabel={
-                      item.favorite ? "Unfavorite" : "Favorite"
-                    }
-                  >
-                    <Ionicons
-                      name={item.favorite ? "heart" : "heart-outline"}
-                      size={14}
-                      color={
-                        item.favorite ? theme.colors.accent : theme.colors.muted
-                      }
-                    />
-                  </Pressable>
-                </View>
-                <Text style={styles.cardMeta}>
-                  {item.issuer || "Issuer"} · {displayCardNumber(item)}
-                </Text>
-                <View style={styles.cardFooter}>
-                  <Text style={styles.cardFooterText}>
-                    {item.expiryMonth}/{item.expiryYear}
-                  </Text>
-                  <View style={styles.cardTypePill}>
-                    <CardBrandIcon type={cardType} size={18} />
-                    <Text style={styles.cardTypePillText}>{cardTypeLabel}</Text>
-                  </View>
-                </View>
-              </GlassPanel>
-            </TouchableOpacity>
-          );
-        }}
+            }}
+            onLongPress={handleLongPress}
+            onFavoritePress={(card) => {
+              const nextFavorite = !card.favorite;
+              impact(Haptics.ImpactFeedbackStyle.Light);
+              upsertCard({ ...card, favorite: nextFavorite });
+              showSnackbar(
+                nextFavorite ? "Moved to favorites" : "Removed from favorites"
+              );
+            }}
+          />
+        )}
       />
 
-      <Modal
-        visible={!!longPressedCard}
-        transparent
-        statusBarTranslucent
-        animationType="fade"
-        onRequestClose={() => setLongPressedCard(null)}
-      >
+      <SelectionToolbar
+        visible={selectionMode}
+        selectedCount={selectedIds.size}
+        onClear={clearSelection}
+        onDelete={handleBulkDelete}
+        onFavorite={handleBulkFavorite}
+        onDuplicate={handleBulkDuplicate}
+      />
+
+      <Modal visible={deleteOpen} transparent animationType="fade">
         <Pressable
-          style={styles.menuBackdrop}
-          onPress={() => setLongPressedCard(null)}
+          style={styles.modalBackdrop}
+          onPress={() => setDeleteOpen(false)}
         >
-          <BlurView
-            intensity={40}
-            tint={theme.isDark ? "dark" : "light"}
-            style={StyleSheet.absoluteFill}
-          />
-
-          {pressedPosition && longPressedCard && (
-            <View
-              style={[
-                styles.menuContainer,
-                {
-                  position: "absolute",
-                  top: pressedPosition.y,
-                  left: pressedPosition.x,
-                  width: pressedPosition.width,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.menuCardPreview,
-                  { width: pressedPosition.width },
-                ]}
+          <Pressable style={styles.modalCard}>
+            <Text style={styles.modalTitle}>
+              Delete card{selectedIds.size > 1 ? "s" : ""}
+            </Text>
+            <Text style={styles.modalBody}>
+              Are you sure you want to delete {selectedIds.size} card
+              {selectedIds.size > 1 ? "s" : ""}? This action cannot be undone.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalGhost}
+                onPress={() => setDeleteOpen(false)}
               >
-                <GlassPanel style={styles.cardGlass}>
-                  <View style={styles.cardRowHeader}>
-                    <Text style={styles.cardTitle}>
-                      {longPressedCard.nickname || "Untitled card"}
-                    </Text>
-                    {longPressedCard.favorite ? (
-                      <View style={styles.cardTagRow}>
-                        <Ionicons
-                          name="heart"
-                          size={14}
-                          color={theme.colors.accent}
-                        />
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text style={styles.cardMeta}>
-                    {longPressedCard.issuer || "Issuer"} ·{" "}
-                    {displayCardNumber(longPressedCard)}
-                  </Text>
-                  <View style={styles.cardFooter}>
-                    <Text style={styles.cardFooterText}>
-                      {longPressedCard.expiryMonth}/{longPressedCard.expiryYear}
-                    </Text>
-                    <View style={styles.cardTypePill}>
-                      {(() => {
-                        const menuCardType = longPressedCard.cardNumber
-                          ? detectCardType(longPressedCard.cardNumber)
-                          : "unknown";
-                        const menuCardTypeLabel =
-                          menuCardType === "visa"
-                            ? "Visa"
-                            : menuCardType === "mastercard"
-                              ? "Mastercard"
-                              : menuCardType === "amex"
-                                ? "AMEX"
-                                : menuCardType === "discover"
-                                  ? "Discover"
-                                  : "Card";
-                        return (
-                          <>
-                            <CardBrandIcon type={menuCardType} size={18} />
-                            <Text style={styles.cardTypePillText}>
-                              {menuCardTypeLabel}
-                            </Text>
-                          </>
-                        );
-                      })()}
-                    </View>
-                  </View>
-                </GlassPanel>
-              </View>
-
-              <View
-                style={[
-                  styles.menuOptions,
-                  { left: (pressedPosition.width - 250) / 2 },
-                  pressedPosition.y > screenHeight / 2
-                    ? { bottom: pressedPosition.height + 12 }
-                    : { top: pressedPosition.height + 12 },
-                ]}
+                <Text style={styles.modalGhostText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalDanger}
+                onPress={confirmBulkDelete}
               >
-                <TouchableOpacity
-                  style={styles.menuAction}
-                  onPress={handleDuplicate}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.menuActionContent}>
-                    <Text style={styles.menuActionText}>Duplicate</Text>
-                    <Ionicons
-                      name="copy-outline"
-                      size={20}
-                      color={theme.colors.ink}
-                    />
-                  </View>
-                </TouchableOpacity>
-
-                <View style={styles.menuDivider} />
-
-                <TouchableOpacity
-                  style={styles.menuAction}
-                  onPress={handleToggleFavorite}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.menuActionContent}>
-                    <Text style={styles.menuActionText}>
-                      {longPressedCard?.favorite ? "Unfavorite" : "Favorite"}
-                    </Text>
-                    <Ionicons
-                      name={
-                        longPressedCard?.favorite ? "heart-outline" : "heart"
-                      }
-                      size={20}
-                      color={theme.colors.ink}
-                    />
-                  </View>
-                </TouchableOpacity>
-
-                <View style={styles.menuDivider} />
-
-                <TouchableOpacity
-                  style={styles.menuAction}
-                  onPress={handleEdit}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.menuActionContent}>
-                    <Text style={styles.menuActionText}>Edit Card</Text>
-                    <Ionicons
-                      name="create-outline"
-                      size={20}
-                      color={theme.colors.ink}
-                    />
-                  </View>
-                </TouchableOpacity>
-
-                <View style={styles.menuDivider} />
-
-                <TouchableOpacity
-                  style={[styles.menuAction, styles.menuActionDanger]}
-                  onPress={handleDelete}
-                >
-                  <View style={styles.menuActionContent}>
-                    <Text
-                      style={[
-                        styles.menuActionText,
-                        { color: theme.colors.danger },
-                      ]}
-                    >
-                      Delete
-                    </Text>
-                    <Ionicons
-                      name="trash-outline"
-                      size={20}
-                      color={theme.colors.danger}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
+                <Text style={styles.modalDangerText}>Delete</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </Pressable>
         </Pressable>
       </Modal>
 
@@ -664,29 +526,20 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       gap: theme.spacing.md,
       alignItems: "center",
       marginBottom: theme.spacing.lg,
+      height: responsiveSpacing(50),
+    },
+    headerTitleContainer: {
+      flex: 1,
     },
     headerActions: {
       flexDirection: "row",
       gap: theme.spacing.sm,
       alignItems: "center",
     },
-    searchFull: {
-      marginTop: theme.spacing.lg,
-    },
-    searchFullRow: {
+    headerActionsFade: {
       flexDirection: "row",
-      alignItems: "center",
       gap: theme.spacing.sm,
-    },
-    searchFullInput: {
-      flex: 1,
-      fontFamily: theme.font.regular,
-      color: theme.colors.ink,
-      paddingVertical: 0,
-    },
-    filtersHidden: {
-      opacity: 0,
-      height: 0,
+      alignItems: "center",
     },
     headerLink: {
       color: theme.colors.ink,
@@ -706,9 +559,10 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       fontFamily: theme.font.regular,
     },
     title: {
-      fontSize: responsiveFontSize(30),
+      fontSize: responsiveFontSize(28),
       fontFamily: theme.font.bold,
       color: theme.colors.ink,
+      flexShrink: 1,
     },
     list: {
       paddingTop: theme.spacing.lg,
@@ -737,6 +591,45 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.muted,
       marginTop: theme.spacing.xl,
       fontFamily: theme.font.regular,
+    },
+    filtersHidden: {
+      opacity: 0,
+      pointerEvents: "none",
+    },
+    emptyContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: responsiveSpacing(60),
+      paddingHorizontal: theme.spacing.xl,
+    },
+    emptyTitle: {
+      fontSize: responsiveFontSize(20),
+      fontFamily: theme.font.bold,
+      color: theme.colors.ink,
+      marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.xs,
+    },
+    emptySubtitle: {
+      fontSize: responsiveFontSize(15),
+      fontFamily: theme.font.regular,
+      color: theme.colors.muted,
+      textAlign: "center",
+      lineHeight: responsiveFontSize(22),
+      marginBottom: theme.spacing.xl,
+    },
+    clearSearchButton: {
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.xl,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.surfaceTint,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    clearSearchText: {
+      color: theme.colors.accent,
+      fontFamily: theme.font.bold,
+      fontSize: responsiveFontSize(14),
     },
     button: {
       backgroundColor: theme.colors.accent,
@@ -856,56 +749,6 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       includeFontPadding: false,
     },
 
-    menuBackdrop: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.3)",
-    },
-    menuContainer: {
-      gap: theme.spacing.md,
-    },
-    menuCardPreview: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.3,
-      shadowRadius: 20,
-      elevation: 10,
-    },
-    menuOptions: {
-      position: "absolute",
-      width: responsiveSpacing(250),
-      backgroundColor: theme.colors.surface,
-      borderRadius: 14,
-      overflow: "hidden",
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.2,
-      shadowRadius: 20,
-      elevation: 5,
-    },
-    menuAction: {
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      backgroundColor: theme.colors.surface,
-    },
-    menuActionContent: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    menuActionText: {
-      fontSize: responsiveFontSize(16),
-      fontFamily: theme.font.regular,
-      color: theme.colors.ink,
-    },
-    menuActionDanger: {
-      borderTopWidth: 0,
-    },
-    menuDivider: {
-      height: 1,
-      backgroundColor: theme.colors.outline,
-    },
     snackbarContainer: {
       position: "absolute",
       left: 0,
@@ -950,5 +793,62 @@ const getStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.accent,
       fontFamily: theme.font.bold,
       fontSize: responsiveFontSize(14),
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      padding: theme.spacing.xl,
+    },
+    modalCard: {
+      borderRadius: theme.radius.xl,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.xl,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.2,
+      shadowRadius: 24,
+      elevation: 10,
+    },
+    modalTitle: {
+      fontSize: responsiveFontSize(20),
+      fontFamily: theme.font.bold,
+      color: theme.colors.ink,
+      marginBottom: theme.spacing.sm,
+      textAlign: "center",
+    },
+    modalBody: {
+      fontSize: responsiveFontSize(15),
+      fontFamily: theme.font.regular,
+      color: theme.colors.muted,
+      lineHeight: responsiveFontSize(22),
+      marginBottom: theme.spacing.xl,
+      textAlign: "center",
+    },
+    modalActions: {
+      flexDirection: "row",
+      gap: theme.spacing.md,
+    },
+    modalGhost: {
+      flex: 1,
+      borderRadius: theme.radius.md,
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceTint,
+    },
+    modalGhostText: {
+      fontFamily: theme.font.bold,
+      color: theme.colors.ink,
+    },
+    modalDanger: {
+      flex: 1,
+      borderRadius: theme.radius.md,
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+      backgroundColor: theme.colors.danger,
+    },
+    modalDangerText: {
+      fontFamily: theme.font.bold,
+      color: theme.colors.surface,
     },
   });

@@ -1,3 +1,7 @@
+jest.mock("expo-crypto", () => ({
+  getRandomBytesAsync: jest.fn().mockResolvedValue(new Uint8Array(16)),
+}));
+
 jest.mock("../src/storage/vaultStorage", () => {
   class VaultMissingKeyError extends Error {
     constructor() {
@@ -535,5 +539,87 @@ describe("vaultStore", () => {
     });
     await useVaultStore.getState().setTagColor("red");
     expect(useVaultStore.getState().vault?.tagColors?.red).toBeUndefined();
+  });
+
+  describe("Bulk Operations", () => {
+    it("deleteCards removes multiple cards and no-ops if vault is null", async () => {
+      // No-op check
+      useVaultStore.setState({ vault: null });
+      await useVaultStore.getState().deleteCards(["1"]);
+      expect(writeVaultData).not.toHaveBeenCalled();
+
+      // Successful deletion
+      useVaultStore.setState({
+        vault: {
+          version: 1,
+          updatedAt: "t",
+          cards: [
+            { ...baseCard, id: "1" },
+            { ...baseCard, id: "2" },
+            { ...baseCard, id: "3" },
+          ],
+        },
+      });
+
+      await useVaultStore.getState().deleteCards(["1", "3"]);
+      const state = useVaultStore.getState().vault;
+      expect(state?.cards.length).toBe(1);
+      expect(state?.cards[0].id).toBe("2");
+      expect(writeVaultData).toHaveBeenCalled();
+    });
+
+    it("duplicateCards duplicates cards and no-ops if vault is null", async () => {
+      // No-op check
+      useVaultStore.setState({ vault: null });
+      await useVaultStore.getState().duplicateCards(["1"]);
+      expect(writeVaultData).not.toHaveBeenCalled();
+
+      // Successful duplication
+      useVaultStore.setState({
+        vault: {
+          version: 1,
+          updatedAt: "t",
+          cards: [{ ...baseCard, id: "1", nickname: "Original" }],
+        },
+      });
+
+      await useVaultStore.getState().duplicateCards(["1"]);
+      const state = useVaultStore.getState().vault;
+      expect(state?.cards.length).toBe(2);
+      expect(state?.cards[1].nickname).toBe("Original");
+      expect(state?.cards[1].isCopy).toBe(true);
+      expect(writeVaultData).toHaveBeenCalled();
+    });
+
+    it("toggleFavoriteCards toggles favorites and no-ops if vault is null", async () => {
+      // No-op check
+      useVaultStore.setState({ vault: null });
+      await useVaultStore.getState().toggleFavoriteCards(["1"]);
+      expect(writeVaultData).not.toHaveBeenCalled();
+
+      // Successful toggle
+      useVaultStore.setState({
+        vault: {
+          version: 1,
+          updatedAt: "t",
+          cards: [
+            { ...baseCard, id: "1", favorite: false },
+            { ...baseCard, id: "2", favorite: true },
+          ],
+        },
+      });
+
+      // If any are not favorites, it favorites all selected
+      await useVaultStore.getState().toggleFavoriteCards(["1", "2"]);
+      let cards = useVaultStore.getState().vault?.cards;
+      expect(cards?.find((c) => c.id === "1")?.favorite).toBe(true);
+      expect(cards?.find((c) => c.id === "2")?.favorite).toBe(true);
+
+      // If all are favorites, it unfavorites all selected
+      await useVaultStore.getState().toggleFavoriteCards(["1", "2"]);
+      cards = useVaultStore.getState().vault?.cards;
+      expect(cards?.find((c) => c.id === "1")?.favorite).toBe(false);
+      expect(cards?.find((c) => c.id === "2")?.favorite).toBe(false);
+    });
   });
 });

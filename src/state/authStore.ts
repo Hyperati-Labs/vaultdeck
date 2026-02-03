@@ -220,7 +220,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         pinLockoutRemainingMs: resilResult.lockoutRemainingMs,
       });
       return { success: false, resiliency: resilResult };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         resiliency: {
@@ -244,6 +244,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   tryBiometric: async () => {
     const { biometricAvailable, biometricEnabled } = get();
     if (!biometricAvailable || !biometricEnabled) {
+      return false;
+    }
+
+    // Block biometric unlock while PIN lockout is active
+    const locked = await isLocked();
+    if (locked) {
+      const remainingMs = await getLockoutRemainingMs();
+      set({ pinLocked: true, pinLockoutRemainingMs: remainingMs });
       return false;
     }
     try {
