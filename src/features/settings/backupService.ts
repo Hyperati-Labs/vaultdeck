@@ -31,7 +31,7 @@ export class PermissionDeniedError extends Error {
   }
 }
 
-const backupExtensions = [".vdb", ".blob"];
+const backupExtensions = [".vdb"];
 
 const getBackupFilename = () => {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");

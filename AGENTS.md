@@ -112,8 +112,7 @@ Quality checks run automatically on PRs and pushes to main via GitHub Actions:
 
 ## Backup Format Notes
 
-- Backup files are `.vdb` (primary) and encrypted with passphrase
-- Import also accepts legacy `.blob` files
+- Backup files are `.vdb` and encrypted with passphrase
 - Backup envelope must match: `magic: "VAULTDECK_BACKUP"`, `version: 4`, `kdf: "pbkdf2-sha256"`, base64 `salt`, and `iterations` within 60k-180k
 - Backup payload decrypts to `{ version: 1, key, blob }`; `version` must stay stable or be migrated explicitly
 - Changes to backup format should be versioned and backward-compatible
