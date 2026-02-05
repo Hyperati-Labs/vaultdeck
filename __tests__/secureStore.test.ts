@@ -34,16 +34,6 @@ function loadSecureStore(options: {
 }
 
 describe("secureStore", () => {
-  it("uses memory store on web", async () => {
-    const { mod } = loadSecureStore({ os: "web" });
-
-    expect(await mod.getItem("k")).toBeNull();
-    await mod.setItem("k", "v");
-    expect(await mod.getItem("k")).toBe("v");
-    await mod.deleteItem("k");
-    expect(await mod.getItem("k")).toBeNull();
-  });
-
   it("uses memory store when secure store missing", async () => {
     const { mod } = loadSecureStore({ os: "ios", hasGetItem: false });
 

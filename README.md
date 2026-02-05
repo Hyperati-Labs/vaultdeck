@@ -78,19 +78,12 @@ npm run ios
 npm run android
 ```
 
-**Web (limited functionality):**
-
-```sh
-npm run web
-```
-
 ### Scripts
 
 - `npm run lint` - Run ESLint
 - `npm run typecheck` - TypeScript type checking
 - `npm run test` - Run Jest tests with coverage
 - `npm run check` - Run all checks (lint, typecheck, test, audit)
-- `npm run deploy` - Build and deploy to web
 - `npm start` - Start development server
 
 ## Backups & Import/Export

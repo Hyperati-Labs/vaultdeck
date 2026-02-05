@@ -8,7 +8,6 @@ import {
 import {
   selectBackupFile,
   saveBackupFile,
-  ExportNotSupportedError,
   InvalidBackupFileError,
 } from "./backupService";
 
@@ -209,8 +208,6 @@ export function useBackupFlow({
         );
       } else if (err instanceof VaultCorruptError) {
         Alert.alert("Import failed", "Backup file is invalid or corrupted.");
-      } else if (err instanceof ExportNotSupportedError) {
-        Alert.alert("Export", "Web export not fully supported in this demo.");
       } else if (err instanceof InvalidBackupFileError) {
         Alert.alert("Import failed", "Please select a VaultDeck backup file.");
       } else {

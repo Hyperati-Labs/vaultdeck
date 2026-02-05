@@ -17,13 +17,6 @@ export class InvalidBackupFileError extends Error {
   }
 }
 
-export class ExportNotSupportedError extends Error {
-  constructor() {
-    super("Backup export not supported on web demo");
-    this.name = "ExportNotSupportedError";
-  }
-}
-
 export class PermissionDeniedError extends Error {
   constructor() {
     super("Permission denied");
@@ -63,10 +56,6 @@ export async function selectBackupFile(): Promise<string | null> {
 }
 
 export async function saveBackupFile(exportedPath: string): Promise<boolean> {
-  if (Platform.OS === "web") {
-    throw new ExportNotSupportedError();
-  }
-
   if (Platform.OS === "android") {
     const permissions =
       await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();

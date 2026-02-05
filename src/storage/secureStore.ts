@@ -1,12 +1,8 @@
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
 
 const memoryStore = new Map<string, string>();
 
 async function isSecureStoreAvailable(): Promise<boolean> {
-  if (Platform.OS === "web") {
-    return false;
-  }
   if (typeof SecureStore.getItemAsync !== "function") {
     return false;
   }

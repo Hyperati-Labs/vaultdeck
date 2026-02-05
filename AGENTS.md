@@ -9,7 +9,7 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Minimal, offline-first vault for payment card details
 - PIN + biometric unlock, encrypted local storage, encrypted backups
 - Expo/React Native app with TypeScript
-- Supports iOS, Android, and web (web has limited functionality)
+- Supports iOS and Android
 
 ## Key Directories
 
@@ -61,18 +61,10 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Avoid exposing secrets in logs, UI, or analytics
 - PINs must remain 4-8 digits and be stored only as salt + SHA-256 hash; failed attempts lock out after 5 tries for 60 seconds
 - Keep vault encryption as NaCl secretbox (xsalsa20-poly1305, 32-byte key, 24-byte nonce) with payload version 1
-- Vault key stays in SecureStore (or in-memory only for web fallback); never persist it in plaintext files
+- Vault key stays in SecureStore; never persist it in plaintext files
 - Do not bypass backup passphrase requirements or import warnings; imports overwrite all vault data
-- Platform differences must be handled explicitly (Android, iOS, Web)
-- Web fallback must never silently weaken security guarantees
+- Platform differences must be handled explicitly (Android, iOS)
 - Clipboard auto-clear is a security feature; respect `clipboardTimeoutSeconds` from settings
-
-## Web Platform Limitations
-
-- Backup export is not supported (throws `ExportNotSupportedError`)
-- Vault key stored in-memory only (no SecureStore equivalent); data is lost on refresh
-- Haptic feedback is disabled
-- File system operations use in-memory fallback (no persistence across sessions)
 
 ## Absolute Prohibitions
 

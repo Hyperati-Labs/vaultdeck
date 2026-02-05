@@ -191,7 +191,6 @@ const getStyles = (theme: any) =>
       marginLeft: theme.spacing.xs,
       paddingVertical: 0,
       height: "100%",
-      ...(Platform.OS === "web" ? { outlineStyle: "none" } : {}),
     } as any,
     clearButton: {
       padding: theme.spacing.xs,

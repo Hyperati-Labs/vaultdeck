@@ -25,8 +25,6 @@ const BACKUP_FORMAT_VERSION = 4;
 const BACKUP_KDF_MIN_ITERATIONS = 60000;
 const BACKUP_KDF_MAX_ITERATIONS = 180000;
 const BACKUP_MAGIC = "VAULTDECK_BACKUP";
-let webVaultBlob: string | null = null;
-let webVaultBackup: string | null = null;
 
 type BackupEnvelope = {
   magic: string;
@@ -84,10 +82,6 @@ export async function deleteVaultKey(): Promise<void> {
 }
 
 export async function deleteVaultBlob(): Promise<void> {
-  if (Platform.OS === "web") {
-    webVaultBlob = null;
-    return;
-  }
   try {
     const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
     if (info.exists) {
@@ -97,9 +91,6 @@ export async function deleteVaultBlob(): Promise<void> {
 }
 
 export async function vaultBlobExists(): Promise<boolean> {
-  if (Platform.OS === "web") {
-    return Boolean(webVaultBlob);
-  }
   const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
   return info.exists;
 }
@@ -199,12 +190,6 @@ function serializeBackupEnvelope(envelope: BackupEnvelope): string {
 }
 
 async function readBackupContent(sourceUri?: string): Promise<string> {
-  if (Platform.OS === "web") {
-    if (!webVaultBackup) {
-      throw new VaultCorruptError();
-    }
-    return webVaultBackup;
-  }
   const fromUri = sourceUri ?? VAULT_BACKUP_PATH;
   const info = await FileSystem.getInfoAsync(fromUri);
   if (!info.exists) {
@@ -216,10 +201,6 @@ async function readBackupContent(sourceUri?: string): Promise<string> {
 }
 
 async function writeBackupContent(serialized: string): Promise<string> {
-  if (Platform.OS === "web") {
-    webVaultBackup = serialized;
-    return "memory://vault-backup";
-  }
   await FileSystem.writeAsStringAsync(VAULT_BACKUP_PATH, serialized, {
     encoding: FileSystem.EncodingType.UTF8,
   });
@@ -235,18 +216,13 @@ export async function exportVaultBlob(passphrase: string): Promise<string> {
     throw new VaultMissingKeyError();
   }
 
-  let blob: string | null = null;
-  if (Platform.OS === "web") {
-    blob = webVaultBlob;
-  } else {
-    const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
-    if (!info.exists) {
-      throw new VaultCorruptError();
-    }
-    blob = await FileSystem.readAsStringAsync(VAULT_BLOB_PATH, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
+  const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
+  if (!info.exists) {
+    throw new VaultCorruptError();
   }
+  const blob = await FileSystem.readAsStringAsync(VAULT_BLOB_PATH, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
 
   if (!blob) {
     throw new VaultCorruptError();
@@ -275,11 +251,6 @@ export async function importVaultBlob(
   const envelope = parseBackupEnvelope(content);
   const backup = await decryptBackupEnvelope(passphrase, envelope);
   await setItem(VAULT_KEY_ID, backup.key);
-
-  if (Platform.OS === "web") {
-    webVaultBlob = backup.blob;
-    return;
-  }
 
   await FileSystem.writeAsStringAsync(VAULT_BLOB_PATH, backup.blob, {
     encoding: FileSystem.EncodingType.UTF8,
@@ -311,10 +282,6 @@ export async function writeVaultData(
     decodeKeyBase64(key)
   );
   const serialized = serializeEncryptedPayload(payload);
-  if (Platform.OS === "web") {
-    webVaultBlob = serialized;
-    return;
-  }
   await FileSystem.writeAsStringAsync(VAULT_BLOB_PATH, serialized, {
     encoding: FileSystem.EncodingType.UTF8,
   });
@@ -323,22 +290,6 @@ export async function writeVaultData(
 export async function readVaultData(
   keyBase64?: string
 ): Promise<VaultData | null> {
-  if (Platform.OS === "web") {
-    if (!webVaultBlob) {
-      return null;
-    }
-    const key = keyBase64 ?? (await getVaultKey());
-    if (!key) {
-      throw new VaultMissingKeyError();
-    }
-    try {
-      const payload = parseEncryptedPayload(webVaultBlob);
-      const plaintext = decryptPayload(payload, decodeKeyBase64(key));
-      return JSON.parse(plaintext) as VaultData;
-    } catch {
-      throw new VaultCorruptError();
-    }
-  }
   const info = await FileSystem.getInfoAsync(VAULT_BLOB_PATH);
   if (!info.exists) {
     return null;
