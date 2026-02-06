@@ -6,7 +6,6 @@ import {
   View,
   Animated,
   Dimensions,
-  Platform,
   Text,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
