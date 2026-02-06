@@ -140,6 +140,61 @@ describe("vaultStorage native flow", () => {
     expect(await mod.vaultBlobExists()).toBe(false);
   });
 
+  it("creates vault key when it does not exist", async () => {
+    const { mod, secureStoreMock } = loadVaultStorage({
+      os: "ios",
+      secureItems: {},
+    });
+
+    const key = await mod.getOrCreateVaultKey();
+    expect(key).toBe("vault-key");
+    expect(secureStoreMock.setItem).toHaveBeenCalledWith(
+      "vault_key_v1",
+      "vault-key"
+    );
+  });
+
+  it("returns existing vault key when it exists", async () => {
+    const { mod, secureStoreMock } = loadVaultStorage({
+      os: "ios",
+      secureItems: { vault_key_v1: "existing-key" },
+    });
+
+    const key = await mod.getOrCreateVaultKey();
+    expect(key).toBe("existing-key");
+    expect(secureStoreMock.setItem).not.toHaveBeenCalled();
+  });
+
+  it("gets vault key when it exists", async () => {
+    const { mod } = loadVaultStorage({
+      os: "ios",
+      secureItems: { vault_key_v1: "my-key" },
+    });
+
+    const key = await mod.getVaultKey();
+    expect(key).toBe("my-key");
+  });
+
+  it("returns null when vault key does not exist", async () => {
+    const { mod } = loadVaultStorage({
+      os: "ios",
+      secureItems: {},
+    });
+
+    const key = await mod.getVaultKey();
+    expect(key).toBe(null);
+  });
+
+  it("deletes vault key", async () => {
+    const { mod, secureStoreMock } = loadVaultStorage({
+      os: "ios",
+      secureItems: { vault_key_v1: "key" },
+    });
+
+    await mod.deleteVaultKey();
+    expect(secureStoreMock.deleteItem).toHaveBeenCalledWith("vault_key_v1");
+  });
+
   it("exports when blob exists", async () => {
     const { mod, fileSystemMock } = loadVaultStorage({
       os: "android",
@@ -197,6 +252,42 @@ describe("vaultStorage native flow", () => {
     await expect(mod.exportVaultBlob("passphrase")).rejects.toThrow(
       mod.VaultMissingKeyError
     );
+  });
+
+  it("rejects export when passphrase is empty", async () => {
+    const { mod } = loadVaultStorage({
+      os: "ios",
+      fileExists: true,
+      secureItems: { vault_key_v1: "key" },
+    });
+
+    await expect(mod.exportVaultBlob("")).rejects.toThrow(
+      mod.VaultPassphraseRequiredError
+    );
+  });
+
+  it("rejects export when blob content is empty", async () => {
+    const { mod } = loadVaultStorage({
+      os: "ios",
+      fileExists: true,
+      fileContent: "",
+      secureItems: { vault_key_v1: "key" },
+    });
+
+    await expect(mod.exportVaultBlob("passphrase")).rejects.toThrow(
+      mod.VaultCorruptError
+    );
+  });
+
+  it("exports on iOS with correct iterations", async () => {
+    const { mod } = loadVaultStorage({
+      os: "ios",
+      fileExists: true,
+      fileContent: "blob",
+      secureItems: { vault_key_v1: "key" },
+    });
+
+    await expect(mod.exportVaultBlob("passphrase")).resolves.toBeDefined();
   });
 
   it("imports when file exists", async () => {

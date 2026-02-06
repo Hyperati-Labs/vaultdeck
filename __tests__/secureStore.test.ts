@@ -39,6 +39,8 @@ describe("secureStore", () => {
 
     await mod.setItem("k", "v");
     expect(await mod.getItem("k")).toBe("v");
+    await mod.deleteItem("k");
+    expect(await mod.getItem("k")).toBe(null);
   });
 
   it("uses memory store when availability check fails", async () => {
