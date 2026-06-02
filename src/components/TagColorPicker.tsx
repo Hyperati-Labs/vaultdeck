@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import {
-  Modal,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { AppModal } from "./AppModal";
 import { TAG_COLOR_PRESETS } from "../utils/tagColors";
 import { useTheme } from "../utils/useTheme";
 import { responsiveFontSize, responsiveSpacing } from "../utils/responsive";
@@ -33,7 +34,7 @@ export function TagColorPicker({
   if (!tag) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <AppModal visible={visible} transparent animationType="fade">
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet}>
           <Text style={styles.title}>Color for #{tag}</Text>
@@ -61,7 +62,7 @@ export function TagColorPicker({
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+    </AppModal>
   );
 }
 

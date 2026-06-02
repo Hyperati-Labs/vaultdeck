@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -9,6 +8,8 @@ import {
   View,
   Animated,
 } from "react-native";
+
+import { AppModal } from "../../src/components/AppModal";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
@@ -93,12 +94,15 @@ export default function CardDetailScreen() {
     }
   };
 
-  const handleCopy = async (value: string, sensitive: boolean) => {
-    if (sensitive) {
+  const handleCopy = async (value: string, requiresAuth: boolean) => {
+    if (requiresAuth) {
       const ok = await requireSensitiveAuth("Copy card number");
       if (!ok) {
         return;
       }
+    }
+    if (!value) {
+      return;
     }
     await Clipboard.setStringAsync(value);
     impact(Haptics.ImpactFeedbackStyle.Light);
@@ -123,14 +127,12 @@ export default function CardDetailScreen() {
       });
     }, 2000);
 
-    if (sensitive) {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        Clipboard.setStringAsync("");
-      }, clipboardTimeoutSeconds * 1000);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
+    timeoutRef.current = setTimeout(() => {
+      Clipboard.setStringAsync("");
+    }, clipboardTimeoutSeconds * 1000);
   };
 
   const handleDelete = () => {
@@ -284,7 +286,7 @@ export default function CardDetailScreen() {
         </View>
       </View>
 
-      <Modal visible={deleteOpen} transparent animationType="fade">
+      <AppModal visible={deleteOpen} transparent animationType="fade">
         <Pressable
           style={styles.modalBackdrop}
           onPress={() => setDeleteOpen(false)}
@@ -311,7 +313,7 @@ export default function CardDetailScreen() {
             </View>
           </Pressable>
         </Pressable>
-      </Modal>
+      </AppModal>
     </Screen>
   );
 }

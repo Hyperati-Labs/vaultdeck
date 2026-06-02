@@ -2,7 +2,6 @@ import { Link, useRouter } from "expo-router";
 import { useEffect, useMemo, useState, useRef } from "react";
 import {
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +11,8 @@ import {
   Animated,
   BackHandler,
 } from "react-native";
+
+import { AppModal } from "../src/components/AppModal";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useVaultStore } from "../src/state/vaultStore";
@@ -460,7 +461,7 @@ export default function Index() {
         onDuplicate={handleBulkDuplicate}
       />
 
-      <Modal visible={deleteOpen} transparent animationType="fade">
+      <AppModal visible={deleteOpen} transparent animationType="fade">
         <Pressable
           style={styles.modalBackdrop}
           onPress={() => setDeleteOpen(false)}
@@ -489,7 +490,7 @@ export default function Index() {
             </View>
           </Pressable>
         </Pressable>
-      </Modal>
+      </AppModal>
 
       {snackbarVisible ? (
         <View style={styles.snackbarContainer} pointerEvents="box-none">

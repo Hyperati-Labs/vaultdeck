@@ -133,8 +133,8 @@ export async function getAttemptCount(): Promise<number> {
     const count = await getItem(PIN_ATTEMPT_COUNT_KEY);
     return count ? Math.min(Math.max(parseInt(count, 10), 0), MAX_ATTEMPTS) : 0;
   } catch {
-    // Default to 0 on error, allowing user to try
-    return 0;
+    // Fail closed: treat storage errors as max attempts
+    return MAX_ATTEMPTS;
   }
 }
 
@@ -142,35 +142,36 @@ export async function getAttemptCount(): Promise<number> {
  * Gets lockout timestamp if locked
  */
 export async function getLockoutTimestamp(): Promise<number | null> {
-  try {
-    const timestamp = await getItem(PIN_LOCKOUT_TIMESTAMP_KEY);
-    return timestamp ? parseInt(timestamp, 10) : null;
-  } catch {
-    return null;
-  }
+  const timestamp = await getItem(PIN_LOCKOUT_TIMESTAMP_KEY);
+  return timestamp ? parseInt(timestamp, 10) : null;
 }
 
 /**
  * Calculates if user is currently locked out
  */
 export async function isLocked(): Promise<boolean> {
-  const timestamp = await getLockoutTimestamp();
-  if (!timestamp) return false;
+  try {
+    const timestamp = await getLockoutTimestamp();
+    if (!timestamp) return false;
 
-  const now = Date.now();
-  const isStillLocked = now - timestamp < LOCKOUT_DURATION_MS;
+    const now = Date.now();
+    const isStillLocked = now - timestamp < LOCKOUT_DURATION_MS;
 
-  if (!isStillLocked) {
-    // Lockout expired, clear state so attempts don't keep resetting
-    await resetAttemptCount();
-    try {
-      await deleteItem(PIN_LOCKOUT_TIMESTAMP_KEY);
-    } catch {
-      // ignore cleanup failures
+    if (!isStillLocked) {
+      // Lockout expired, clear state so attempts don't keep resetting
+      await resetAttemptCount();
+      try {
+        await deleteItem(PIN_LOCKOUT_TIMESTAMP_KEY);
+      } catch {
+        // ignore cleanup failures
+      }
     }
-  }
 
-  return isStillLocked;
+    return isStillLocked;
+  } catch {
+    // Fail closed when lockout state cannot be read
+    return true;
+  }
 }
 
 /**
@@ -249,8 +250,7 @@ export async function resetAttemptCount(): Promise<void> {
  * Validates PIN format before verification attempt
  */
 export function validatePinFormat(pin: string): boolean {
-  // PIN must be 4-8 digits
-  return /^\d{4,8}$/.test(pin);
+  return /^\d{4}$/.test(pin);
 }
 
 /**

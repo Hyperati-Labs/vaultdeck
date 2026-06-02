@@ -3,7 +3,7 @@
     "name": "VaultDeck",
     "slug": "vaultdeck",
     "scheme": "vaultdeck",
-    "version": "1.2.6",
+    "version": "1.2.7",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/app_icon.png",
@@ -25,11 +25,21 @@
             }
           }
         }
-      ]
+      ],
+      [
+        "react-native-edge-to-edge",
+        {
+          "android": {
+            "parentTheme": "Default",
+            "enforceNavigationBarContrast": true
+          }
+        }
+      ],
+      "./plugins/withAndroidLargeScreenManifest.js"
     ],
     "ios": {
       "bundleIdentifier": "com.hyperati.labs.vaultdeck",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to unlock your vault."
@@ -37,12 +47,16 @@
     },
     "android": {
       "package": "com.hyperati.labs.vaultdeck",
-      "versionCode": 6,
+      "versionCode": 7,
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/app_icon.png",
         "backgroundColor": "#0f141b"
       },
       "softwareKeyboardLayoutMode": "pan"
+    },
+    "androidNavigationBar": {
+      "enforceContrast": true
     },
     "extra": {
       "router": {},

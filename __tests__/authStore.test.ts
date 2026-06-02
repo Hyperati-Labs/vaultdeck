@@ -278,13 +278,13 @@ describe("authStore", () => {
   it("updates settings", async () => {
     await useAuthStore.getState().setAutoLockSeconds(60);
     await useAuthStore.getState().setBiometricEnabled(true);
-    await useAuthStore.getState().setPinLength(6);
+    await useAuthStore.getState().setPinLength(4);
     useAuthStore.getState().setAutoLockBypass(true);
 
     const state = useAuthStore.getState();
     expect(state.autoLockSeconds).toBe(60);
     expect(state.biometricEnabled).toBe(true);
-    expect(state.pinLength).toBe(6);
+    expect(state.pinLength).toBe(4);
     expect(state.autoLockBypass).toBe(true);
     expect(setItem).toHaveBeenCalled();
   });

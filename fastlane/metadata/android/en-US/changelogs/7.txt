@@ -1,0 +1,7 @@
+Security update:
+• Clipboard clears after copying any card number (including last 4)
+• PIN required to enable biometrics
+• Improved lockout handling when secure storage is unavailable
+• Removed unsupported web storage paths
+
+Also fixes reset vault confirmation text and standardizes 4-digit PIN policy.

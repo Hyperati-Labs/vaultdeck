@@ -38,7 +38,10 @@ export default function Screen({ children, compact = false }: ScreenProps) {
           { backgroundColor: theme.colors.surfaceTint },
         ]}
       />
-      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <SafeAreaView
+        style={styles.safeArea}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <View style={[styles.content, compact && styles.contentCompact]}>
           {children}
         </View>

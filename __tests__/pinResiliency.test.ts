@@ -124,10 +124,10 @@ describe("pinResiliency", () => {
       expect(count).toBe(5); // MAX_ATTEMPTS
     });
 
-    it("returns 0 when getItem throws error", async () => {
+    it("returns max attempts when getItem throws error", async () => {
       mockGetItem.mockRejectedValue(new Error("Storage error"));
       const count = await getAttemptCount();
-      expect(count).toBe(0);
+      expect(count).toBe(5);
     });
 
     it("records failed attempt and increments count", async () => {
@@ -199,10 +199,10 @@ describe("pinResiliency", () => {
       expect(locked).toBe(true);
     });
 
-    it("returns false when lockout timestamp throws error", async () => {
+    it("returns true when lockout timestamp cannot be read", async () => {
       mockGetItem.mockRejectedValue(new Error("Storage error"));
       const locked = await isLocked();
-      expect(locked).toBe(false);
+      expect(locked).toBe(true);
     });
 
     it("expires lockout after duration", async () => {
@@ -253,17 +253,17 @@ describe("pinResiliency", () => {
   });
 
   describe("PIN format validation", () => {
-    it("accepts valid PINs", () => {
+    it("accepts valid 4-digit PINs", () => {
       expect(validatePinFormat("1234")).toBe(true);
-      expect(validatePinFormat("12345678")).toBe(true);
-      expect(validatePinFormat("000000")).toBe(true);
+      expect(validatePinFormat("0000")).toBe(true);
     });
 
     it("rejects invalid PINs", () => {
-      expect(validatePinFormat("123")).toBe(false); // too short
-      expect(validatePinFormat("123456789")).toBe(false); // too long
-      expect(validatePinFormat("12a4")).toBe(false); // non-numeric
-      expect(validatePinFormat("")).toBe(false); // empty
+      expect(validatePinFormat("123")).toBe(false);
+      expect(validatePinFormat("12345")).toBe(false);
+      expect(validatePinFormat("12345678")).toBe(false);
+      expect(validatePinFormat("12a4")).toBe(false);
+      expect(validatePinFormat("")).toBe(false);
     });
   });
 

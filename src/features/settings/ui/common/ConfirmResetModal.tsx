@@ -1,4 +1,6 @@
-import { Modal, TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+
+import { AppModal } from "../../../../components/AppModal";
 import { BlurView } from "expo-blur";
 
 import { useTheme } from "../../../../utils/useTheme";
@@ -19,7 +21,7 @@ export function ConfirmResetModal({
   const styles = getStyles(theme);
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="fade"
@@ -29,20 +31,21 @@ export function ConfirmResetModal({
         <View style={styles.modalCard}>
           <Text style={styles.modalTitle}>Reset Vault?</Text>
           <Text style={styles.modalBody}>
-            This will permanently delete keychains and all data from this
-            device. This action cannot be undone unless you have a backup.
+            This will permanently delete all cards and vault encryption keys on
+            this device. Your PIN and biometric settings will remain. This
+            cannot be undone unless you have a backup.
           </Text>
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.modalGhost} onPress={onCancel}>
               <Text style={styles.modalGhostText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalDanger} onPress={onConfirm}>
-              <Text style={styles.modalDangerText}>Reset Everything</Text>
+              <Text style={styles.modalDangerText}>Reset Vault</Text>
             </TouchableOpacity>
           </View>
         </View>
       </BlurView>
-    </Modal>
+    </AppModal>
   );
 }
 

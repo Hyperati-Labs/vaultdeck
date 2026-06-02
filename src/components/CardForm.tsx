@@ -1,7 +1,6 @@
 import { useMemo as reactUseMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -10,6 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { AppModal } from "./AppModal";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
@@ -504,7 +505,7 @@ export default function CardForm({
         </View>
       </ScrollView>
 
-      <Modal
+      <AppModal
         visible={discard.discardModalVisible}
         transparent
         animationType="fade"
@@ -532,7 +533,7 @@ export default function CardForm({
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       <TagColorPicker
         visible={colorPickerTarget !== null}

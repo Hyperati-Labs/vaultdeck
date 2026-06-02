@@ -1,4 +1,6 @@
-import { Modal, TouchableOpacity, View, Text, ScrollView } from "react-native";
+import { TouchableOpacity, View, Text, ScrollView } from "react-native";
+
+import { AppModal } from "../../../../components/AppModal";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "../../../../utils/useTheme";
@@ -28,7 +30,7 @@ export function OptionPickerModal<T>({
   const styles = getSettingsStyles(theme);
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="fade"
@@ -93,6 +95,6 @@ export function OptionPickerModal<T>({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }

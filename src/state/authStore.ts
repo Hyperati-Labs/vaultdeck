@@ -14,6 +14,7 @@ import {
   getLockoutRemainingMs,
   PinResiliencyResult,
 } from "../utils/pinResiliency";
+import { secureCompare } from "../utils/secureCompare";
 
 const PIN_SALT_KEY = "vault_pin_salt_v1";
 const PIN_HASH_KEY = "vault_pin_hash_v1";
@@ -86,10 +87,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       ? Number(autoLock)
       : DEFAULT_AUTO_LOCK_SECONDS;
     const parsedPinLength = pinLengthRaw ? Number(pinLengthRaw) : null;
-    const pinLength =
-      parsedPinLength && parsedPinLength >= 4 && parsedPinLength <= 8
-        ? parsedPinLength
-        : null;
+    const pinLength = parsedPinLength === 4 ? 4 : null;
     set({
       hasPin,
       biometricAvailable: hasHardware && isEnrolled,
@@ -185,7 +183,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             return false;
           }
           const hash = await hashPin(pin, salt);
-          return hash === storedHash;
+          return secureCompare(hash, storedHash);
         });
       });
 
@@ -276,7 +274,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ biometricEnabled: enabled });
   },
   setPinLength: async (length: number) => {
+    if (length !== 4) {
+      return;
+    }
     await setItem(PIN_LENGTH_KEY, String(length));
-    set({ pinLength: length });
+    set({ pinLength: 4 });
   },
 }));

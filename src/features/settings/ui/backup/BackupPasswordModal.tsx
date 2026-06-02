@@ -1,12 +1,13 @@
 import {
   ActivityIndicator,
-  Modal,
   Text,
   TextInput,
   View,
   TouchableOpacity,
 } from "react-native";
 import { BlurView } from "expo-blur";
+
+import { AppModal } from "../../../../components/AppModal";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 
@@ -42,7 +43,7 @@ export function BackupPasswordModal({
   } = flow;
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="fade"
@@ -192,6 +193,6 @@ export function BackupPasswordModal({
           </View>
         </View>
       </BlurView>
-    </Modal>
+    </AppModal>
   );
 }

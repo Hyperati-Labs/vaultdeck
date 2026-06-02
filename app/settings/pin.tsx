@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Modal,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { AppModal } from "../../src/components/AppModal";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -313,7 +314,7 @@ export default function ChangePinScreen() {
 
         <View style={{ height: theme.spacing.lg }} />
 
-        <Modal visible={showSuccess} transparent animationType="fade">
+        <AppModal visible={showSuccess} transparent animationType="fade">
           <BlurView intensity={20} style={styles.modalBackdrop}>
             <View style={styles.modalCard}>
               <View style={styles.modalContent}>
@@ -341,7 +342,7 @@ export default function ChangePinScreen() {
               </View>
             </View>
           </BlurView>
-        </Modal>
+        </AppModal>
       </View>
     </Screen>
   );

@@ -9,7 +9,7 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Minimal, offline-first vault for payment card details
 - PIN + biometric unlock, encrypted local storage, encrypted backups
 - Expo/React Native app with TypeScript
-- Supports iOS and Android
+- Supports iOS and Android (phones and tablets; `orientation: default` on Android)
 
 ## Key Directories
 
@@ -22,6 +22,7 @@ This file provides quick, reliable context for AI agents and contributors workin
 - `src/utils/` - Shared utilities (haptics, logging, responsive UI, theme, etc.)
 - `src/types/` - Centralized TypeScript definitions
 - `__tests__/` - Jest tests (logic should maintain high coverage)
+- `plugins/` - Expo config plugins (Android manifest fixes, etc.)
 - `.github/workflows/` - CI workflows (lint, typecheck, test, audit)
 
 ## Safe Defaults
@@ -59,7 +60,7 @@ This file provides quick, reliable context for AI agents and contributors workin
 - Do not reduce cryptographic strength or change algorithms without a clear migration plan
 - Do not bypass biometric/PIN checks or auto-lock behavior
 - Avoid exposing secrets in logs, UI, or analytics
-- PINs must remain 4-8 digits and be stored only as salt + SHA-256 hash; failed attempts lock out after 5 tries for 60 seconds
+- PINs must remain exactly 4 digits and be stored only as salt + SHA-256 hash; failed attempts lock out after 5 tries for 60 seconds
 - Keep vault encryption as NaCl secretbox (xsalsa20-poly1305, 32-byte key, 24-byte nonce) with payload version 1
 - Vault key stays in SecureStore; never persist it in plaintext files
 - Do not bypass backup passphrase requirements or import warnings; imports overwrite all vault data

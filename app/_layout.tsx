@@ -2,7 +2,13 @@ import { Stack } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { AppState, StyleSheet, View } from "react-native";
-import { StatusBar } from "expo-status-bar";
+import Constants, { AppOwnership } from "expo-constants";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
+
+import { AppSystemBars } from "../src/components/AppSystemBars";
 import {
   useFonts,
   SpaceGrotesk_500Medium,
@@ -97,8 +103,14 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <StatusBar style={theme.isDark ? "light" : "dark"} />
+    <SafeAreaProvider
+      initialMetrics={
+        Constants.appOwnership === AppOwnership.Expo
+          ? undefined
+          : initialWindowMetrics
+      }
+    >
+      <AppSystemBars style={theme.isDark ? "light" : "dark"} />
       <View style={[styles.app, { backgroundColor: theme.colors.surface }]}>
         <Stack
           screenOptions={{
@@ -126,7 +138,7 @@ export default function RootLayout() {
           </View>
         )}
       </View>
-    </>
+    </SafeAreaProvider>
   );
 }
 

@@ -51,6 +51,16 @@ describe("settingsStore", () => {
     expect(useSettingsStore.getState().clipboardTimeoutSeconds).toBe(10);
   });
 
+  it("clamps tampered clipboard timeout to default", async () => {
+    (getItem as jest.Mock)
+      .mockResolvedValueOnce("1")
+      .mockResolvedValueOnce("9999");
+
+    await useSettingsStore.getState().loadSettings();
+
+    expect(useSettingsStore.getState().clipboardTimeoutSeconds).toBe(10);
+  });
+
   it("updates settings", async () => {
     await useSettingsStore.getState().setHapticsEnabled(false);
     await useSettingsStore.getState().setClipboardTimeoutSeconds(60);

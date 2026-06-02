@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.7] - 2026-06-02
+
+### Security
+
+- Removed unsupported web storage fallbacks; vault data uses native secure storage and filesystem only.
+- Clipboard auto-clear now applies to all copied card numbers, including last-4-only copies.
+- PIN verification required before enabling biometrics.
+- PIN lockout fails closed when secure storage cannot be read.
+- Constant-time comparison for PIN hash verification.
+
+### Fixed
+
+- Reset vault confirmation text now accurately describes what is deleted (cards and vault keys; PIN and biometrics remain).
+- Clipboard timeout setting clamps invalid stored values to the default.
+
+### Improved
+
+- PIN policy standardized to exactly 4 digits across app and documentation.
+- Added SECURITY.md, contributor guidelines, Dependabot, and PR security checklist.
+- Android edge-to-edge: root safe-area provider, bottom inset handling, explicit edge-to-edge config, `SystemBars` (replaces deprecated status-bar color APIs), and edge-to-edge-safe modals for Android 15+.
+- Android large screens: remove ML Kit portrait orientation locks from the merged manifest; keep `expo-dev-client` as a dev-only dependency for store builds.
+
 ## [1.2.6] - 2026-02-02
 
 ### Added

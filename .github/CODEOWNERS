@@ -1,0 +1,5 @@
+# Security-sensitive paths require owner review
+/src/crypto/ @Hyperati-Labs
+/src/storage/ @Hyperati-Labs
+/src/state/authStore.ts @Hyperati-Labs
+/src/utils/pinResiliency.ts @Hyperati-Labs

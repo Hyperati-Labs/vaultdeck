@@ -3,6 +3,7 @@ import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useMemo } from "react";
 
+import { PinVerifyModal } from "../../../components/PinVerifyModal";
 import { SettingsRow } from "../ui/common/SettingsRow";
 import { getSettingsStyles } from "../settingsStyles";
 import { useTheme } from "../../../utils/useTheme";
@@ -26,6 +27,20 @@ export function SecuritySettingsSection(_props: any) {
     useSettingsStore();
   const [autoLockPickerOpen, setAutoLockPickerOpen] = useState(false);
   const [clipboardPickerOpen, setClipboardPickerOpen] = useState(false);
+  const [biometricPinPromptOpen, setBiometricPinPromptOpen] = useState(false);
+
+  const handleBiometricToggle = (nextEnabled: boolean) => {
+    if (nextEnabled) {
+      setBiometricPinPromptOpen(true);
+      return;
+    }
+    void setBiometricEnabled(false);
+  };
+
+  const handleBiometricVerified = () => {
+    setBiometricPinPromptOpen(false);
+    void setBiometricEnabled(true);
+  };
 
   const timeouts = useMemo(
     () => [
@@ -94,7 +109,7 @@ export function SecuritySettingsSection(_props: any) {
             >
               <Switch
                 value={biometricEnabled}
-                onValueChange={setBiometricEnabled}
+                onValueChange={handleBiometricToggle}
                 disabled={!hasPin || !biometricAvailable}
                 trackColor={{
                   false: theme.colors.outline,
@@ -159,6 +174,13 @@ export function SecuritySettingsSection(_props: any) {
         value={clipboardTimeoutSeconds}
         onSelect={setClipboardTimeoutSeconds}
         onClose={() => setClipboardPickerOpen(false)}
+      />
+
+      <PinVerifyModal
+        visible={biometricPinPromptOpen}
+        title="Enter PIN to enable biometrics"
+        onCancel={() => setBiometricPinPromptOpen(false)}
+        onVerified={handleBiometricVerified}
       />
     </View>
   );

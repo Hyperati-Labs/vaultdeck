@@ -1,4 +1,6 @@
-import { Modal, Text, View, TouchableOpacity } from "react-native";
+import { Text, View, TouchableOpacity } from "react-native";
+
+import { AppModal } from "../../../../components/AppModal";
 import { BlurView } from "expo-blur";
 
 import { useTheme } from "../../../../utils/useTheme";
@@ -19,7 +21,7 @@ export function BackupSuccessModal({
   if (!message) return null;
 
   return (
-    <Modal
+    <AppModal
       visible={Boolean(message)}
       transparent
       animationType="fade"
@@ -36,6 +38,6 @@ export function BackupSuccessModal({
           </View>
         </View>
       </BlurView>
-    </Modal>
+    </AppModal>
   );
 }

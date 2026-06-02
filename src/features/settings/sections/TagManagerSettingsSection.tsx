@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { AppModal } from "../../../components/AppModal";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
@@ -277,7 +278,7 @@ export function TagManagerSettingsSection() {
       />
 
       {}
-      <Modal visible={renameState !== null} transparent animationType="fade">
+      <AppModal visible={renameState !== null} transparent animationType="fade">
         <BlurView intensity={20} style={localStyles.modalBackdrop}>
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -342,10 +343,10 @@ export function TagManagerSettingsSection() {
             </View>
           </View>
         </BlurView>
-      </Modal>
+      </AppModal>
 
       {}
-      <Modal visible={deleteState !== null} transparent animationType="fade">
+      <AppModal visible={deleteState !== null} transparent animationType="fade">
         <BlurView intensity={20} style={localStyles.modalBackdrop}>
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -408,7 +409,7 @@ export function TagManagerSettingsSection() {
             </View>
           </View>
         </BlurView>
-      </Modal>
+      </AppModal>
     </>
   );
 }
