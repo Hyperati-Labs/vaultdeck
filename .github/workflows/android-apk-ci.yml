@@ -15,7 +15,7 @@ jobs:
       GRADLE_USER_HOME: ~/.gradle
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js 20 with npm cache
         uses: actions/setup-node@v4
